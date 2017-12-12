@@ -1,0 +1,40 @@
+AllCops:
+  TargetRubyVersion: 2.3
+  Exclude:
+    - !ruby/regexp /(vendor|bundle|bin|db|tmp)\/.*/
+  DisplayCopNames: true
+  DisplayStyleGuide: true
+  UseCache: true
+  CacheRootDirectory: tmp
+
+Rails:
+  Enabled: true
+
+Bundler/DuplicatedGem:
+  Enabled: false
+
+Metrics/AbcSize:
+  Exclude:
+    - test/**/*.rb
+
+Metrics/ClassLength:
+  Exclude:
+    - test/**/*.rb
+
+Metrics/LineLength:
+  Max: 120
+
+Metrics/MethodLength:
+  Exclude:
+    - test/**/*.rb
+
+Rails/TimeZone:
+  Exclude:
+    - test/unit/data_types_test.rb
+
+Style/DateTime:
+  Exclude:
+    - test/unit/data_types_test.rb
+
+Style/Documentation:
+  Enabled: false
