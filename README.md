@@ -113,9 +113,22 @@ For RDF serialization, you are required to add an `iri` method to your serialize
 In contrast to the JSON API serializer, this rdf serializers don't automatically serialize the `type` and `id` of your model. 
 It's recommended to add `attribute :type, predicate: RDF[:type]` and a method defining the type to your serializers to fix this.
 
-### Adding meta triples
+### Custom triples per model
 
-You can add additional triples to the serialization from the controller, for example:
+You can add custom triples to the serialization of a model in the serializer, for example:
+```ruby
+class PostSerializer < ActiveModel::Serializer
+  triples :my_custom_triples
+  
+  def my_custom_triples
+    [[RDF::URI('https://example.com'), RDF::TEST[:someValue], 1]]
+  end
+end
+```
+
+### Meta triples
+
+You can add additional triples to the serialization in the controller, for example:
 ```ruby
 render nt: model, meta: [[RDF::URI('https://example.com'), RDF::TEST[:someValue], 1]]
 ```

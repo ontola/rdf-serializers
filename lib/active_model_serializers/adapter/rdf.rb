@@ -50,6 +50,14 @@ module ActiveModelSerializers
         end
       end
 
+      def custom_triples_for(serializer)
+        serializer.class.try(:_triples)&.map do |key|
+          serializer.read_attribute_for_serialization(key).each do |triple|
+            @graph << triple
+          end
+        end
+      end
+
       def graph
         return @graph if @graph.present?
         @graph = ::RDF::Graph.new
@@ -66,8 +74,7 @@ module ActiveModelSerializers
           serializer.each { |s| process_relationship(s, include_slice) }
           return
         end
-        return unless serializer&.object
-        return unless process_resource(serializer, include_slice)
+        return unless serializer&.object && process_resource(serializer, include_slice)
         process_relationships(serializer, include_slice)
       end
 
@@ -102,6 +109,7 @@ module ActiveModelSerializers
           break nil if serializer.read_attribute_for_serialization(:iri).nil?
           requested_fields = fieldset&.fields_for(type)
           attributes_for(serializer, requested_fields)
+          custom_triples_for(serializer)
         end
         requested_associations = fieldset.fields_for(type) || '*'
         relationships_for(serializer, requested_associations, include_slice)
