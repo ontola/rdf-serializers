@@ -2,7 +2,7 @@
 
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'rdf_serializers/version'
+require 'rdf/serializers/version'
 
 Gem::Specification.new do |s|
   s.name = 'rdf-serializers'

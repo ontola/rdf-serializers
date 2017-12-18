@@ -28,9 +28,9 @@ $ bundle
 
 First, register the formats you wish to serialize to. For example, add the following to `config/initializers/rdf_serializers.rb`:
 ```ruby
-require 'rdf_serializers/renderers'
+require 'rdf/serializers/renderers'
 
-RDFSerializers::Renderers.register(:ntriples)
+RDF::Serializers::Renderers.register(:ntriples)
 ```
 This automatically registers the MIME type.
 
@@ -45,7 +45,7 @@ end
 
 You can register multiple formats, if you add the correct gems. For example, add `rdf-turtle` to your gemfile and put this in the initializer:
 ```ruby
-require 'rdf_serializers/renderers'
+require 'rdf/serializers/renderers'
 
 opts = {
   prefixes: {
@@ -58,7 +58,7 @@ opts = {
   }
 }
 
-RDFSerializers::Renderers.register(%i[ntriples turtle], opts)
+RDF::Serializers::Renderers.register(%i[ntriples turtle], opts)
 
 ```
 

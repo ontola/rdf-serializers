@@ -11,7 +11,7 @@ require 'action_controller'
 require 'action_controller/test_case'
 require 'action_controller/railtie'
 require 'active_model_serializers'
-require 'rdf_serializers'
+require 'rdf/serializers'
 require 'fileutils'
 FileUtils.mkdir_p(File.expand_path('../../tmp/cache', __FILE__))
 
@@ -31,6 +31,6 @@ require 'support/test_helpers'
 
 require 'fixtures/poro'
 
-require 'rdf_serializers/renderers'
+require 'rdf/serializers/renderers'
 
-RDFSerializers::Renderers.register(:ntriples)
+RDF::Serializers::Renderers.register(:ntriples)
