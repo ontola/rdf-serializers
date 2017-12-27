@@ -70,10 +70,7 @@ module ActiveModelSerializers
       end
 
       def process_relationship(serializer, include_slice)
-        if serializer.respond_to?(:each)
-          serializer.each { |s| process_relationship(s, include_slice) }
-          return
-        end
+        return serializer.each { |s| process_relationship(s, include_slice) } if serializer.respond_to?(:each)
         return unless serializer&.object && process_resource(serializer, include_slice)
         process_relationships(serializer, include_slice)
       end
@@ -96,10 +93,7 @@ module ActiveModelSerializers
       end
 
       def relationships_for(serializer, requested_associations, include_slice)
-        include_directive = JSONAPI::IncludeDirective.new(
-          requested_associations,
-          allow_wildcard: true
-        )
+        include_directive = JSONAPI::IncludeDirective.new(requested_associations, allow_wildcard: true)
         serializer.associations(include_directive, include_slice).each do |association|
           Relationship.new(serializer, instance_options, association).triples.each do |triple|
             @graph << triple
