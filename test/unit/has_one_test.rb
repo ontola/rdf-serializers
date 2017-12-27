@@ -37,4 +37,19 @@ class HasOneTest < ActiveSupport::TestCase
       '<https://bio/43> <http://test.org/content> "AMS Contributor" .'
     )
   end
+
+  def test_has_one_from_block
+    serializer_class = Class.new(ApplicationSerializer) do
+      has_one :custom, predicate: RDF::TEST[:custom] do
+        {
+          id: RDF::URI('https://has.one'),
+          type: RDF::TEST[:ignore]
+        }
+      end
+    end
+    assert_ntriples(
+      ActiveModelSerializers::Adapter::RDF.new(serializer_class.new(@author)).dump(:ntriples),
+      '<https://author/1> <http://test.org/custom> <https://has.one> .'
+    )
+  end
 end

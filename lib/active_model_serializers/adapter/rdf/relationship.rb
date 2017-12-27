@@ -39,7 +39,11 @@ module ActiveModelSerializers
             parent_serializer.read_attribute_for_serialization(:iri)
           else
             serializer = association.lazy_association.serializer
-            serializer.read_attribute_for_serialization(:iri) if serializer && association.object
+            if (virtual_value = association.virtual_value)
+              virtual_value[:id]
+            elsif serializer && association.object
+              serializer.read_attribute_for_serialization(:iri)
+            end
           end
         end
 
