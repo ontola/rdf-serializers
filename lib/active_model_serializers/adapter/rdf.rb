@@ -79,12 +79,16 @@ module ActiveModelSerializers
       end
 
       def process_relationships(serializer, include_slice)
+        return unless serializer.respond_to?(:associations)
         serializer.associations(include_slice).each do |association|
           process_relationship(association.lazy_association.serializer, include_slice[association.key])
         end
       end
 
       def process_resource(serializer, include_slice = {})
+        if serializer.is_a?(ActiveModel::Serializer::CollectionSerializer)
+          return serializer.map { |child| process_resource(child, include_slice) }
+        end
         return unless serializer.respond_to?(:iri) || serializer.object.respond_to?(:iri)
         return false unless @resource_identifiers.add?(serializer.read_attribute_for_serialization(:iri))
         resource_object_for(serializer, include_slice)

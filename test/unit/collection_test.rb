@@ -52,4 +52,46 @@ class CollectionTest < ActiveSupport::TestCase
       '<https://post/2> <http://test.org/blog> <https://blog/999> .'
     )
   end
+
+  def test_mixed_models
+    serializer = ActiveModel::Serializer::CollectionSerializer.new([@first_post, @blog, @author])
+    adapter = ActiveModelSerializers::Adapter::RDF.new(serializer)
+
+    assert_ntriples(
+      adapter.dump(:ntriples),
+      # post 1
+      '<https://post/1> <http://test.org/author> <https://author/1> .',
+      '<https://post/1> <http://test.org/name> "Hello!!" .',
+      '<https://post/1> <http://test.org/text> "Hello, world!!" .',
+      '<https://post/1> <http://test.org/blog> <https://blog/999> .',
+      # blog
+      '<https://blog/23> <http://test.org/name> "AMS Blog" .',
+      # author
+      '<https://author/1> <http://test.org/id> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .',
+      '<https://author/1> <http://test.org/name> "Steve K." .',
+      '<https://author/1> <http://test.org/posts> <https://post/2> .',
+      '<https://author/1> <http://test.org/posts> <https://post/1> .'
+    )
+  end
+
+  def test_nested_mixed_models
+    serializer = ActiveModel::Serializer::CollectionSerializer.new([[@first_post], [@blog], [@author]])
+    adapter = ActiveModelSerializers::Adapter::RDF.new(serializer)
+
+    assert_ntriples(
+      adapter.dump(:ntriples),
+      # post 1
+      '<https://post/1> <http://test.org/author> <https://author/1> .',
+      '<https://post/1> <http://test.org/name> "Hello!!" .',
+      '<https://post/1> <http://test.org/text> "Hello, world!!" .',
+      '<https://post/1> <http://test.org/blog> <https://blog/999> .',
+      # blog
+      '<https://blog/23> <http://test.org/name> "AMS Blog" .',
+      # author
+      '<https://author/1> <http://test.org/id> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .',
+      '<https://author/1> <http://test.org/name> "Steve K." .',
+      '<https://author/1> <http://test.org/posts> <https://post/2> .',
+      '<https://author/1> <http://test.org/posts> <https://post/1> .'
+    )
+  end
 end

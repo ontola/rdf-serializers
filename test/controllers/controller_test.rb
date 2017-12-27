@@ -4,13 +4,8 @@ require 'test_helper'
 
 class ControllerTest < ActionController::TestCase
   class TestController < ActionController::Base
-    def profile
-      @profile = Profile.new(
-        id: 1,
-        name: 'Name 1',
-        description: 'Description 1',
-        comments: 'Comments 1'
-      )
+    def render_array
+      render nt: [[post], profile]
     end
 
     def render_ntriples
@@ -20,9 +15,41 @@ class ControllerTest < ActionController::TestCase
     def render_meta
       render nt: profile, meta: [[RDF::URI('https://example.com'), RDF::TEST[:someValue], 1]]
     end
+
+    private
+
+    def post
+      @post = Post.new(
+        id: 2,
+        title: 'Nice',
+        body: 'Some plea'
+      )
+    end
+
+    def profile
+      @profile = Profile.new(
+        id: 1,
+        name: 'Name 1',
+        description: 'Description 1',
+        comments: 'Comments 1'
+      )
+    end
   end
 
   tests TestController
+
+  def test_render_array
+    get :render_array
+
+    assert_ntriples(
+      response.body,
+      '<https://profile/1> <http://test.org/description> "Description 1" .',
+      '<https://profile/1> <http://test.org/name> "Name 1" .',
+      '<https://post/2> <http://test.org/name> "Nice" .',
+      '<https://post/2> <http://test.org/text> "Some plea" .',
+      '<https://post/2> <http://test.org/blog> <https://blog/999> .'
+    )
+  end
 
   def test_render_ntriples
     get :render_ntriples
