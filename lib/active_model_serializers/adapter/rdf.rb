@@ -7,7 +7,7 @@ module ActiveModelSerializers
       autoload :Relationship
 
       delegate :object, to: :serializer
-      delegate :dump, to: :graph
+      delegate :dump, :triples, to: :graph
 
       def initialize(serializer, options = {})
         super
