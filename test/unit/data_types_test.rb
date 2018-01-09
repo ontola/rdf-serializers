@@ -9,7 +9,7 @@ class DataTypesTest < ActiveSupport::TestCase
   class ResourceSerializer < ApplicationSerializer
     attribute :attr, predicate: RDF::TEST[:attr]
 
-    def iri
+    def rdf_subject
       RDF::URI('https://example.com')
     end
   end

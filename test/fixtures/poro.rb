@@ -29,7 +29,7 @@ class Model < ActiveModelSerializers::Model
 end
 
 class ApplicationSerializer < ActiveModel::Serializer
-  def iri
+  def rdf_subject
     RDF::URI("https://#{object.class.name.underscore}/#{object.id}")
   end
 end

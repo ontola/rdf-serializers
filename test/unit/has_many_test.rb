@@ -92,7 +92,7 @@ class HasManyTest < ActiveSupport::TestCase
       attribute :title, predicate: RDF::TEST[:name]
       has_many :tags, predicate: RDF::TEST[:tags]
 
-      def iri
+      def rdf_subject
         RDF::URI("https://#{object.class.name.underscore}/#{object.id}")
       end
     end
