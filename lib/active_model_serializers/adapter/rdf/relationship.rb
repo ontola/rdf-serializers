@@ -6,9 +6,9 @@ module ActiveModelSerializers
       class Relationship < JsonApi::Relationship
         def triples
           return [] if subject.blank? || predicate.blank? || data.empty?
-          data.map do |iri|
-            raise "#{iri} is not a RDF::URI but a #{iri.class}" unless iri.is_a?(::RDF::URI)
-            [subject, predicate, iri]
+          data.map do |object|
+            raise "#{object} is not a RDF::Resource but a #{object.class}" unless object.is_a?(::RDF::Resource)
+            [subject, predicate, object]
           end
         end
 
@@ -17,32 +17,32 @@ module ActiveModelSerializers
         def data
           @data ||=
             if association.collection?
-              iri_for_many(association).compact
+              objects_for_many(association).compact
             else
-              [iri_for_one(association)].compact
+              [object_for_one(association)].compact
             end
         end
 
-        def iri_for_many(association)
+        def objects_for_many(association)
           collection_serializer = association.lazy_association.serializer
           if collection_serializer.respond_to?(:each)
             collection_serializer.map do |serializer|
-              serializer.read_attribute_for_serialization(:iri)
+              serializer.read_attribute_for_serialization(:rdf_subject)
             end
           else
             []
           end
         end
 
-        def iri_for_one(association)
+        def object_for_one(association)
           if belongs_to_id_on_self?(association)
-            parent_serializer.read_attribute_for_serialization(:iri)
+            parent_serializer.read_attribute_for_serialization(:rdf_subject)
           else
             serializer = association.lazy_association.serializer
             if (virtual_value = association.virtual_value)
               virtual_value[:id]
             elsif serializer && association.object
-              serializer.read_attribute_for_serialization(:iri)
+              serializer.read_attribute_for_serialization(:rdf_subject)
             end
           end
         end
@@ -52,7 +52,7 @@ module ActiveModelSerializers
         end
 
         def subject
-          @subject ||= parent_serializer.read_attribute_for_serialization(:iri)
+          @subject ||= parent_serializer.read_attribute_for_serialization(:rdf_subject)
         end
       end
     end

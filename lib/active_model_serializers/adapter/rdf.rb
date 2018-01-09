@@ -22,11 +22,11 @@ module ActiveModelSerializers
 
       private
 
-      def add_attribute(data, iri, value)
+      def add_attribute(data, subject, value)
         predicate = data.options[:predicate]
         return unless predicate
         value = value.respond_to?(:each) ? value : [value]
-        value.compact.map { |v| add_triple(iri, predicate, v) }
+        value.compact.map { |v| add_triple(subject, predicate, v) }
       end
 
       def add_triple(subject, predicate, object)
@@ -46,7 +46,7 @@ module ActiveModelSerializers
         serializer.class._attributes_data.map do |key, data|
           next if data.excluded?(serializer)
           next unless fields.nil? || fields.include?(key)
-          add_attribute(data, serializer.read_attribute_for_serialization(:iri), serializer.attributes[key])
+          add_attribute(data, serializer.read_attribute_for_serialization(:rdf_subject), serializer.attributes[key])
         end
       end
 
@@ -86,8 +86,8 @@ module ActiveModelSerializers
         if serializer.is_a?(ActiveModel::Serializer::CollectionSerializer)
           return serializer.map { |child| process_resource(child, include_slice) }
         end
-        return unless serializer.respond_to?(:iri) || serializer.object.respond_to?(:iri)
-        return false unless @resource_identifiers.add?(serializer.read_attribute_for_serialization(:iri))
+        return unless serializer.respond_to?(:rdf_subject) || serializer.object.respond_to?(:rdf_subject)
+        return false unless @resource_identifiers.add?(serializer.read_attribute_for_serialization(:rdf_subject))
         resource_object_for(serializer, include_slice)
         true
       end
@@ -104,7 +104,7 @@ module ActiveModelSerializers
       def resource_object_for(serializer, include_slice = {})
         type = type_for(serializer, instance_options).to_s
         serializer.fetch(self) do
-          break nil if serializer.read_attribute_for_serialization(:iri).nil?
+          break nil if serializer.read_attribute_for_serialization(:rdf_subject).nil?
           requested_fields = fieldset&.fields_for(type)
           attributes_for(serializer, requested_fields)
           custom_triples_for(serializer)

@@ -103,9 +103,9 @@ class PostSerializer < ActiveModel::Serializer
 end
 ```
 
-For RDF serialization, you are required to add an `iri` method to your serializer, which must return a `RDF::URI`. For example:
+For RDF serialization, you are required to add an `rdf_subject` method to your serializer or model, which must return a `RDF::Resource`. For example:
 ```ruby
-  def iri
+  def rdf_subject
     RDF::URI(Rails.application.routes.url_helpers.comment_url(object))
   end
 ```
