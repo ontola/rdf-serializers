@@ -32,7 +32,7 @@ module ActiveModelSerializers
       def add_triple(subject, predicate, object)
         obj =
           case object
-          when ::RDF::Resource, ::RDF::Literal
+          when ::RDF::Term
             object
           when ActiveSupport::TimeWithZone
             ::RDF::Literal(object.to_datetime)
