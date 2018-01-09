@@ -39,7 +39,7 @@ module ActiveModelSerializers
           else
             ::RDF::Literal(object)
           end
-        @graph << [::RDF::URI(subject), ::RDF::URI(predicate), obj]
+        @graph << ::RDF::Statement.new(subject, ::RDF::URI(predicate), obj)
       end
 
       def attributes_for(serializer, fields)

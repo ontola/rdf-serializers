@@ -121,7 +121,7 @@ class PostSerializer < ActiveModel::Serializer
   triples :my_custom_triples
   
   def my_custom_triples
-    [[RDF::URI('https://example.com'), RDF::TEST[:someValue], 1]]
+    [RDF::Statement.new(RDF::URI('https://example.com'), RDF::TEST[:someValue], 1)]
   end
 end
 ```
@@ -130,7 +130,7 @@ end
 
 You can add additional triples to the serialization in the controller, for example:
 ```ruby
-render nt: model, meta: [[RDF::URI('https://example.com'), RDF::TEST[:someValue], 1]]
+render nt: model, meta: [RDF::Statement.new(RDF::URI('https://example.com'), RDF::TEST[:someValue], 1)]
 ```
 
 ## Contributing

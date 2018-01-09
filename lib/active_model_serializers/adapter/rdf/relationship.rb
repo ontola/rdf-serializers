@@ -8,7 +8,7 @@ module ActiveModelSerializers
           return [] if subject.blank? || predicate.blank? || data.empty?
           data.map do |object|
             raise "#{object} is not a RDF::Resource but a #{object.class}" unless object.is_a?(::RDF::Resource)
-            [subject, predicate, object]
+            ::RDF::Statement.new(subject, predicate, object)
           end
         end
 
