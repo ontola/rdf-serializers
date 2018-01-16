@@ -22,8 +22,7 @@ module ActiveModelSerializers
 
       private
 
-      def add_attribute(data, subject, value)
-        predicate = data.options[:predicate]
+      def add_attribute(subject, predicate, value)
         return unless predicate
         value = value.respond_to?(:each) ? value : [value]
         value.compact.map { |v| add_triple(subject, predicate, v) }
@@ -43,10 +42,12 @@ module ActiveModelSerializers
       end
 
       def attributes_for(serializer, fields)
-        serializer.class._attributes_data.map do |key, data|
-          next if data.excluded?(serializer)
-          next unless fields.nil? || fields.include?(key)
-          add_attribute(data, serializer.read_attribute_for_serialization(:rdf_subject), serializer.attributes[key])
+        serializer.attributes(fields).each do |key, value|
+          add_attribute(
+            serializer.read_attribute_for_serialization(:rdf_subject),
+            serializer.class._attributes_data[key].try(:options).try(:[], :predicate),
+            value
+          )
         end
       end
 
