@@ -36,6 +36,7 @@ matrix:
   allow_failures:
     - rvm: ruby-head
     - rvm: jruby-head
+    - { rvm: 2.3.5, env: "RAILS_VERSION=master" }
     # See JRuby currently failing on Rails 5+ https://github.com/jruby/activerecord-jdbc-adapter/issues/708
     - { rvm: jruby-9.1.13.0, jdk: oraclejdk8, env: "RAILS_VERSION=5.1 JRUBY_OPTS='--dev -J-Xmx1024M --debug'" }
   fast_finish: true
