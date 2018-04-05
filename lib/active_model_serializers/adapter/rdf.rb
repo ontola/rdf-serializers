@@ -7,7 +7,7 @@ module ActiveModelSerializers
       autoload :Relationship
 
       delegate :object, to: :serializer
-      delegate :dump, :triples, to: :graph
+      delegate :dump, :triples, to: :repository
 
       def initialize(serializer, options = {})
         super
@@ -28,7 +28,7 @@ module ActiveModelSerializers
         value.compact.map { |v| add_triple(subject, predicate, v) }
       end
 
-      def add_triple(subject, predicate, object)
+      def add_triple(subject, predicate, object, graph = nil)
         obj =
           case object
           when ::RDF::Term
@@ -38,7 +38,7 @@ module ActiveModelSerializers
           else
             ::RDF::Literal(object)
           end
-        @graph << ::RDF::Statement.new(subject, ::RDF::URI(predicate), obj)
+        @repository << ::RDF::Statement.new(subject, ::RDF::URI(predicate), obj, graph_name: graph)
       end
 
       def attributes_for(serializer, fields)
@@ -54,20 +54,20 @@ module ActiveModelSerializers
       def custom_triples_for(serializer)
         serializer.class.try(:_triples)&.map do |key|
           serializer.read_attribute_for_serialization(key).each do |triple|
-            @graph << triple
+            @repository << triple
           end
         end
       end
 
-      def graph
-        return @graph if @graph.present?
-        @graph = ::RDF::Graph.new
+      def repository
+        return @repository if @repository.present?
+        @repository = ::RDF::Repository.new
 
         serializers.each { |serializer| process_resource(serializer, @include_directive) }
         serializers.each { |serializer| process_relationships(serializer, @include_directive) }
         instance_options[:meta]&.each { |meta| add_triple(*meta) }
 
-        @graph
+        @repository
       end
 
       def process_relationship(serializer, include_slice)
@@ -97,7 +97,7 @@ module ActiveModelSerializers
         include_directive = JSONAPI::IncludeDirective.new(requested_associations, allow_wildcard: true)
         serializer.associations(include_directive, include_slice).each do |association|
           Relationship.new(serializer, instance_options, association).triples.each do |triple|
-            @graph << triple
+            @repository << triple
           end
         end
       end
