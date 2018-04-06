@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# rubocop:disable Metrics/ClassLength
 module ActiveModelSerializers
   module Adapter
     class RDF < Base
@@ -7,13 +8,28 @@ module ActiveModelSerializers
       autoload :Relationship
 
       delegate :object, to: :serializer
-      delegate :dump, :triples, to: :repository
 
       def initialize(serializer, options = {})
         super
         @include_directive = JSONAPI::IncludeDirective.new(options[:include], allow_wildcard: true)
         @fieldset = options[:fieldset] || ActiveModel::Serializer::Fieldset.new(options.delete(:fields))
         @resource_identifiers = Set.new
+      end
+
+      def dump(*args, **options)
+        if include_named_graphs?(*args)
+          repository.dump(*args, options)
+        else
+          repository.project_graph(nil).dump(*args, options)
+        end
+      end
+
+      def triples(*args, **options)
+        if include_named_graphs?(*args)
+          repository.triples(*args, options)
+        else
+          repository.project_graph(nil).triples(*args, options)
+        end
       end
 
       protected
@@ -70,6 +86,11 @@ module ActiveModelSerializers
         @repository
       end
 
+      def include_named_graphs?(*args)
+        ::RDF::Serializers.config.always_include_named_graphs ||
+          ::RDF::Writer.for(*args.presence || :nquads).instance_methods.include?(:write_quad)
+      end
+
       def process_relationship(serializer, include_slice)
         return serializer.each { |s| process_relationship(s, include_slice) } if serializer.respond_to?(:each)
         return unless serializer&.object && process_resource(serializer, include_slice)
@@ -124,3 +145,4 @@ module ActiveModelSerializers
     end
   end
 end
+# rubocop:enable Metrics/ClassLength

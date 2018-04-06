@@ -41,6 +41,16 @@ respond_to do |format|
 end
 ```
 
+## Configuration
+
+Currently, there is one configuration value which can be set using `RDF::Serializers.configure`.
+```
+RDF::Serializers.configure do |config|
+  config.always_include_named_graphs = false # true by default. Whether to include named graphs when the serialization format does not support quads.
+end
+
+```
+
 ## Formats
 
 You can register multiple formats, if you add the correct gems. For example, add `rdf-turtle` to your gemfile and put this in the initializer:

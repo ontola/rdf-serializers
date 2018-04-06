@@ -2,3 +2,4 @@
 
 require 'active_model_serializers/adapter/rdf'
 require 'active_model_serializers/serializer'
+require 'rdf/serializers/config'
