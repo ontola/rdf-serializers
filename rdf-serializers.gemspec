@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new('>= 0') if s.respond_to? :required_rubygems_version=
   s.authors = ['Arthur Dingemans']
-  s.date = '2017-12-11'
+  s.date = File.mtime('lib/rdf/serializers/version.rb').strftime('%Y-%m-%d')
   s.summary = 'Adds RDF serialization, like n-triples or turtle, to active model serializers'
   s.email = 'arthur@argu.co'
   s.files = Dir.glob('lib/**/*.rb')
