@@ -40,8 +40,13 @@ module ActiveModelSerializers
 
       def add_attribute(subject, predicate, value)
         return unless predicate
-        value = value.respond_to?(:each) ? value : [value]
-        value.compact.map { |v| add_triple(subject, predicate, v) }
+        normalized =
+          if !value.respond_to?(:each) || value.is_a?(::RDF::List)
+            [value]
+          else
+            value
+          end
+        normalized.compact.map { |v| add_triple(subject, predicate, v) }
       end
 
       def add_triple(subject, predicate, object, graph = nil)
@@ -49,6 +54,10 @@ module ActiveModelSerializers
           case object
           when ::RDF::Term
             object
+          when ::RDF::List
+            list = object.statements
+            @repository << object.statements
+            list.first.subject
           when ActiveSupport::TimeWithZone
             ::RDF::Literal(object.to_datetime)
           else
