@@ -38,7 +38,7 @@ module ActiveModelSerializers
 
       private
 
-      def add_attribute(subject, predicate, value)
+      def add_attribute(subject, predicate, value, graph)
         return unless predicate
         normalized =
           if !value.respond_to?(:each) || value.is_a?(::RDF::List)
@@ -46,7 +46,7 @@ module ActiveModelSerializers
           else
             value
           end
-        normalized.compact.map { |v| add_triple(subject, predicate, v) }
+        normalized.compact.map { |v| add_triple(subject, predicate, v, graph) }
       end
 
       def add_triple(subject, predicate, object, graph = nil)
@@ -59,7 +59,8 @@ module ActiveModelSerializers
           add_attribute(
             serializer.read_attribute_for_serialization(:rdf_subject),
             serializer.class._attributes_data[key].try(:options).try(:[], :predicate),
-            value
+            value,
+            serializer.class._attributes_data[key].try(:options).try(:[], :graph)
           )
         end
       end

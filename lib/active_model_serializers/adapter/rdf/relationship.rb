@@ -5,10 +5,10 @@ module ActiveModelSerializers
     class RDF
       class Relationship < JsonApi::Relationship
         def triples
-          return [] if subject.blank? || predicate.blank? || data.empty?
+          return [] if no_data?
           data.map do |object|
             raise "#{object} is not a RDF::Resource but a #{object.class}" unless object.is_a?(::RDF::Resource)
-            ::RDF::Statement.new(subject, predicate, object)
+            ::RDF::Statement.new(subject, predicate, object, graph_name: graph_name)
           end
         end
 
@@ -21,6 +21,14 @@ module ActiveModelSerializers
             else
               [object_for_one(association)].compact
             end
+        end
+
+        def graph_name
+          association.reflection.options[:graph]
+        end
+
+        def no_data?
+          subject.blank? || predicate.blank? || data.empty?
         end
 
         def objects_for_many(association)
