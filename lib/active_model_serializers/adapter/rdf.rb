@@ -50,20 +50,8 @@ module ActiveModelSerializers
       end
 
       def add_triple(subject, predicate, object, graph = nil)
-        obj =
-          case object
-          when ::RDF::Term
-            object
-          when ::RDF::List
-            list = object.statements
-            @repository << object.statements
-            list.first.subject
-          when ActiveSupport::TimeWithZone
-            ::RDF::Literal(object.to_datetime)
-          else
-            ::RDF::Literal(object)
-          end
-        @repository << ::RDF::Statement.new(subject, ::RDF::URI(predicate), obj, graph_name: graph)
+        @repository <<
+          ::RDF::Statement.new(subject, ::RDF::URI(predicate), normalized_object(object), graph_name: graph)
       end
 
       def attributes_for(serializer, fields)
@@ -98,6 +86,21 @@ module ActiveModelSerializers
       def include_named_graphs?(*args)
         ::RDF::Serializers.config.always_include_named_graphs ||
           ::RDF::Writer.for(*args.presence || :nquads).instance_methods.include?(:write_quad)
+      end
+
+      def normalized_object(object) # rubocop:disable Metrics/MethodLength
+        case object
+        when ::RDF::Term
+          object
+        when ::RDF::List
+          list = object.statements
+          @repository << object.statements
+          list.first.subject
+        when ActiveSupport::TimeWithZone
+          ::RDF::Literal(object.to_datetime)
+        else
+          ::RDF::Literal(object)
+        end
       end
 
       def process_relationship(serializer, include_slice)
