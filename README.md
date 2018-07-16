@@ -1,14 +1,13 @@
 # RDF Serializers
 
-<a href="https://travis-ci.org/argu-co/rdf-serializers"><img src="https://travis-ci.org/argu-co/rdf-serializers.svg?branch=master" alt="Build Status"></a>
+<a href="https://travis-ci.org/ontola/rdf-serializers"><img src="https://travis-ci.org/ontola/rdf-serializers.svg?branch=master" alt="Build Status"></a>
 
 ## About
 
 RDF Serializers enables serialization to RDF formats. It uses your existing [active_model_serializers](https://github.com/rails-api/active_model_serializers) serializers, with a few modifications.
 The serialization itself is done by the [rdf](https://github.com/ruby-rdf/rdf) gem.
 
-This was built at [Argu](https://argu.co). If you like what we do, these technologies
-or open data in general, send us [a mail](mailto:info@argu.co).
+This was built at [Ontola](https://ontola.io/). If you want to know more about our passion for open data, send us [an e-mail](mailto:ontola@argu.co).
 
 ## Installation
 

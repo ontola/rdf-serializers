@@ -15,7 +15,7 @@ Gem::Specification.new do |s|
   s.email = 'arthur@argu.co'
   s.files = Dir.glob('lib/**/*.rb')
   s.test_files = s.files.grep(%r{^(test|spec|features)/})
-  s.homepage = 'https://github.com/argu-co/rdf-serializers'
+  s.homepage = 'https://github.com/ontola/rdf-serializers'
   s.require_paths = ['lib']
 
   s.add_runtime_dependency 'active_model_serializers', '~> 0.10'
