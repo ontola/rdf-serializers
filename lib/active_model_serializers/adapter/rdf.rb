@@ -40,12 +40,7 @@ module ActiveModelSerializers
 
       def add_attribute(subject, predicate, value, graph)
         return unless predicate
-        normalized =
-          if !value.respond_to?(:each) || value.is_a?(::RDF::List)
-            [value]
-          else
-            value
-          end
+        normalized = value.is_a?(Array) ? value : [value]
         normalized.compact.map { |v| add_triple(subject, predicate, v, graph) }
       end
 
