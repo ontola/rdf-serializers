@@ -40,6 +40,7 @@ module ActiveModelSerializers
 
       def add_attribute(subject, predicate, value, graph)
         return unless predicate
+
         normalized = value.is_a?(Array) ? value : [value]
         normalized.compact.map { |v| add_triple(subject, predicate, v, graph) }
       end
@@ -70,6 +71,7 @@ module ActiveModelSerializers
 
       def repository
         return @repository if @repository.present?
+
         @repository = ::RDF::Repository.new
 
         serializers.each { |serializer| process_resource(serializer, @include_directive) }
@@ -112,12 +114,15 @@ module ActiveModelSerializers
 
       def process_relationship(serializer, include_slice)
         return serializer.each { |s| process_relationship(s, include_slice) } if serializer.respond_to?(:each)
+
         return unless serializer&.object && process_resource(serializer, include_slice)
+
         process_relationships(serializer, include_slice)
       end
 
       def process_relationships(serializer, include_slice)
         return unless serializer.respond_to?(:associations)
+
         serializer.associations(include_slice).each do |association|
           process_relationship(association.lazy_association.serializer, include_slice[association.key])
         end
@@ -128,7 +133,9 @@ module ActiveModelSerializers
           return serializer.map { |child| process_resource(child, include_slice) }
         end
         return unless serializer.respond_to?(:rdf_subject) || serializer.object.respond_to?(:rdf_subject)
+
         return false unless @resource_identifiers.add?(serializer.read_attribute_for_serialization(:rdf_subject))
+
         resource_object_for(serializer, include_slice)
         true
       end
@@ -139,6 +146,7 @@ module ActiveModelSerializers
 
       def raise_missing_nodes
         return if missing_nodes.empty?
+
         raise "The following triples point to nodes that are not included in the graph:\n#{missing_nodes.join("\n")}"
       end
 
@@ -155,6 +163,7 @@ module ActiveModelSerializers
         type = type_for(serializer, instance_options).to_s
         serializer.fetch(self) do
           break nil if serializer.read_attribute_for_serialization(:rdf_subject).nil?
+
           requested_fields = fieldset&.fields_for(type)
           attributes_for(serializer, requested_fields)
           custom_triples_for(serializer)

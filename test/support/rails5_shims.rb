@@ -30,8 +30,10 @@ module Rails5Shims
     def fold_kwargs!(args)
       hash = args&.[](0)
       return unless hash.respond_to?(:key)
+
       Rails5Shims::ControllerTests::REQUEST_KWARGS.each do |kwarg|
         next unless hash.key?(kwarg)
+
         value = hash.delete(kwarg)
         if value.is_a? String
           args.insert(0, value)

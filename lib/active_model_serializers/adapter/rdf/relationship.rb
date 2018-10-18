@@ -6,8 +6,10 @@ module ActiveModelSerializers
       class Relationship < JsonApi::Relationship
         def triples
           return [] if no_data?
+
           data.map do |object|
             raise "#{object} is not a RDF::Resource but a #{object.class}" unless object.is_a?(::RDF::Resource)
+
             ::RDF::Statement.new(subject, predicate, object, graph_name: graph_name)
           end
         end

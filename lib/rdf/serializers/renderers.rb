@@ -17,6 +17,7 @@ module RDF
         symbols.each do |symbol|
           format = RDF::Format.for(symbol)
           raise "#{symbol} if not a known rdf format" if format.nil?
+
           Mime::Type.register format.content_type.first, format.file_extension.first
           add_renderer(format, opts)
         end
