@@ -76,12 +76,23 @@ module ActiveModelSerializers
         serializers.each { |serializer| process_relationships(serializer, @include_directive) }
         instance_options[:meta]&.each { |meta| add_triple(*meta) }
 
+        raise_missing_nodes if raise_on_missing_nodes?
+
         @repository
       end
 
       def include_named_graphs?(*args)
         ::RDF::Serializers.config.always_include_named_graphs ||
           ::RDF::Writer.for(*args.presence || :nquads).instance_methods.include?(:write_quad)
+      end
+
+      def missing_nodes
+        @missing_nodes ||=
+          @repository
+          .objects
+          .select(&:node?)
+          .reject { |n| @repository.has_subject?(n) }
+          .map { |n| @repository.query([nil, nil, n]).first }
       end
 
       def normalized_object(object) # rubocop:disable Metrics/MethodLength
@@ -120,6 +131,15 @@ module ActiveModelSerializers
         return false unless @resource_identifiers.add?(serializer.read_attribute_for_serialization(:rdf_subject))
         resource_object_for(serializer, include_slice)
         true
+      end
+
+      def raise_on_missing_nodes?
+        Rails.env.development? || Rails.env.test?
+      end
+
+      def raise_missing_nodes
+        return if missing_nodes.empty?
+        raise "The following triples point to nodes that are not included in the graph:\n#{missing_nodes.join("\n")}"
       end
 
       def relationships_for(serializer, requested_associations, include_slice)
