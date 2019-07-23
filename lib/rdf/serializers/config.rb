@@ -13,6 +13,7 @@ module RDF
     class Configuration
       include ActiveSupport::Configurable
       config_accessor :always_include_named_graphs
+      config_accessor :default_graph
     end
 
     configure do |config|

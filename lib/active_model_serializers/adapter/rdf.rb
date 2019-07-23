@@ -45,9 +45,10 @@ module ActiveModelSerializers
         normalized.compact.map { |v| add_triple(subject, predicate, v, graph) }
       end
 
-      def add_triple(subject, predicate, object, graph = nil)
-        @repository <<
-          ::RDF::Statement.new(subject, ::RDF::URI(predicate), normalized_object(object), graph_name: graph)
+      def add_triple(subject, predicate = nil, object = nil, graph = nil)
+        statement = subject.statement? ? subject : normalized_triple(subject, predicate, object, graph)
+
+        @repository << statement
       end
 
       def attributes_for(serializer, fields)
@@ -64,7 +65,7 @@ module ActiveModelSerializers
       def custom_triples_for(serializer)
         serializer.class.try(:_triples)&.map do |key|
           serializer.read_attribute_for_serialization(key).each do |triple|
-            @repository << triple
+            add_triple(*triple)
           end
         end
       end
@@ -112,6 +113,15 @@ module ActiveModelSerializers
         end
       end
 
+      def normalized_triple(subject, predicate, object, graph)
+        ::RDF::Statement.new(
+          subject,
+          ::RDF::URI(predicate),
+          normalized_object(object),
+          graph_name: graph || ::RDF::Serializers.config.default_graph
+        )
+      end
+
       def process_relationship(serializer, include_slice)
         return serializer.each { |s| process_relationship(s, include_slice) } if serializer.respond_to?(:each)
 
@@ -154,7 +164,7 @@ module ActiveModelSerializers
         include_directive = JSONAPI::IncludeDirective.new(requested_associations, allow_wildcard: true)
         serializer.associations(include_directive, include_slice).each do |association|
           Relationship.new(serializer, instance_options, association).triples.each do |triple|
-            @repository << triple
+            add_triple(*triple)
           end
         end
       end
