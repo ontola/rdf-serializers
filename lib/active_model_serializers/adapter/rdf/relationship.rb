@@ -26,7 +26,7 @@ module ActiveModelSerializers
         end
 
         def graph_name
-          association.reflection.options[:graph]
+          association.reflection.options[:graph] || ::RDF::Serializers.config.default_graph
         end
 
         def no_data?

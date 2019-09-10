@@ -42,13 +42,11 @@ module ActiveModelSerializers
         return unless predicate
 
         normalized = value.is_a?(Array) ? value : [value]
-        normalized.compact.map { |v| add_triple(subject, predicate, v, graph) }
+        normalized.compact.map { |v| add_triple([subject, predicate, v, graph]) }
       end
 
-      def add_triple(subject, predicate = nil, object = nil, graph = nil)
-        statement = subject.statement? ? subject : normalized_triple(subject, predicate, object, graph)
-
-        @repository << statement
+      def add_triple(triple)
+        @repository << (triple.is_a?(Array) ? normalized_triple(*triple) : triple)
       end
 
       def attributes_for(serializer, fields)
@@ -65,7 +63,7 @@ module ActiveModelSerializers
       def custom_triples_for(serializer)
         serializer.class.try(:_triples)&.map do |key|
           serializer.read_attribute_for_serialization(key).each do |triple|
-            add_triple(*triple)
+            add_triple(triple)
           end
         end
       end
@@ -77,7 +75,7 @@ module ActiveModelSerializers
 
         serializers.each { |serializer| process_resource(serializer, @include_directive) }
         serializers.each { |serializer| process_relationships(serializer, @include_directive) }
-        instance_options[:meta]&.each { |meta| add_triple(*meta) }
+        instance_options[:meta]&.each { |meta| add_triple(meta) }
 
         raise_missing_nodes if raise_on_missing_nodes?
 
@@ -113,7 +111,7 @@ module ActiveModelSerializers
         end
       end
 
-      def normalized_triple(subject, predicate, object, graph)
+      def normalized_triple(subject, predicate, object, graph = nil)
         ::RDF::Statement.new(
           subject,
           ::RDF::URI(predicate),
@@ -164,7 +162,7 @@ module ActiveModelSerializers
         include_directive = JSONAPI::IncludeDirective.new(requested_associations, allow_wildcard: true)
         serializer.associations(include_directive, include_slice).each do |association|
           Relationship.new(serializer, instance_options, association).triples.each do |triple|
-            add_triple(*triple)
+            add_triple(triple)
           end
         end
       end
