@@ -42,10 +42,11 @@ end
 
 ## Configuration
 
-Currently, there is one configuration value which can be set using `RDF::Serializers.configure`.
+You can configure the gem using `RDF::Serializers.configure`.
 ```
 RDF::Serializers.configure do |config|
   config.always_include_named_graphs = false # true by default. Whether to include named graphs when the serialization format does not support quads.
+  config.default_graph = RDF::URI('https://example.com/graph') # nil by default.
 end
 
 ```
@@ -84,11 +85,16 @@ and more
 
 Add a predicate to the attributes and relations you wish to serialize.
 
-It's recommended to reuse existing vocabularies provided by the `rdf` gem, and add your own for missing predicates. 
-For example:
+It's recommended to reuse existing vocabularies provided by the `rdf` gem and the [rdf-vocab](https://github.com/ruby-rdf/rdf-vocab) gem, 
+and add your own vocab for missing predicates. One way to be able to access the different vocabs throughout your application is by defining a module:
 ```
+require 'rdf'
+require "rdf/vocab"
+
+module NS
+  SCHEMA = RDF::Vocab::SCHEMA
   MY_VOCAB = RDF::Vocabulary.new('http://example.com/')
-  SCHEMA = RDF::Vocabulary.new('http://schema.org/')
+end
 ```
 
 Now add the predicates to your serializers. 
@@ -105,10 +111,10 @@ end
 New:
 ```ruby
 class PostSerializer < ActiveModel::Serializer
-  attribute :title, predicate: SCHEMA[:name]
-  attribute :body, predicate: SCHEMA[:text]
-  belongs_to :author, predicate: MY_VOCAB[:author]
-  has_many :comments, predicate: MY_VOCAB[:comments]
+  attribute :title, predicate: NS::SCHEMA[:name]
+  attribute :body, predicate: NS::SCHEMA[:text]
+  belongs_to :author, predicate: NS::MY_VOCAB[:author]
+  has_many :comments, predicate: NS::MY_VOCAB[:comments]
 end
 ```
 
@@ -130,7 +136,7 @@ class PostSerializer < ActiveModel::Serializer
   triples :my_custom_triples
   
   def my_custom_triples
-    [RDF::Statement.new(RDF::URI('https://example.com'), RDF::TEST[:someValue], 1)]
+    [RDF::Statement.new(RDF::URI('https://example.com'), NS::MY_VOCAB[:fooBar], 1)]
   end
 end
 ```
@@ -139,7 +145,7 @@ end
 
 You can add additional triples to the serialization in the controller, for example:
 ```ruby
-render nt: model, meta: [RDF::Statement.new(RDF::URI('https://example.com'), RDF::TEST[:someValue], 1)]
+render nt: model, meta: [RDF::Statement.new(RDF::URI('https://example.com'), NS::MY_VOCAB[:fooBar], 1)]
 ```
 
 ## Contributing
