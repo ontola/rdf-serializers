@@ -53,8 +53,8 @@ module Rails5Shims
 end
 
 if Rails::VERSION::MAJOR < 5
-  ActionController::TestCase.send :include, Rails5Shims::ControllerTests
-  ActionDispatch::IntegrationTest.send :include, Rails5Shims::ControllerTests
+  ActionController::TestCase.include Rails5Shims::ControllerTests
+  ActionDispatch::IntegrationTest.include Rails5Shims::ControllerTests
 end
 
 if RUBY_VERSION >= '2.6.0'
