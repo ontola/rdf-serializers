@@ -89,10 +89,11 @@ class DataTypesTest < ActiveSupport::TestCase
 
   def test_time_with_zone
     @resource.attr = 1.year.ago
+    expected = @resource.attr.strftime(RDF::Literal::DateTime::FORMAT).sub('+00:00', 'Z').sub('.000', '')
 
     assert_ntriples(
       @adapter.dump(:ntriples),
-      "<https://example.com> <http://test.org/attr> \"#{@resource.attr.strftime('%FT%TZ')}\""\
+      "<https://example.com> <http://test.org/attr> \"#{expected}\""\
       '^^<http://www.w3.org/2001/XMLSchema#dateTime> .'
     )
   end
