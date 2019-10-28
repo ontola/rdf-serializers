@@ -20,6 +20,6 @@ Gem::Specification.new do |s|
   s.require_paths = ['lib']
 
   s.add_runtime_dependency 'active_model_serializers', '~> 0.10'
-  s.add_runtime_dependency 'railties', '>= 4.2.0', '< 6'
+  s.add_runtime_dependency 'railties', '>= 4.2.0', '< 7'
   s.add_runtime_dependency 'rdf', '~> 3.0'
 end
