@@ -7,7 +7,9 @@ cache:
 
 before_install:
   - "travis_retry gem update --system"
-  - "travis_retry gem update bundler"
+  - "bundle --version"
+  - "if [ $RAILS_VERSION != 4.2 ]; then travis_retry gem update bundler; else gem uninstall -v '>= 2' -i $(rvm gemdir)@global -ax bundler || true && gem install bundler -v '< 2'; fi"
+  - "bundle --version"
 install: bundle install --path=vendor/bundle --retry=3 --jobs=3
 
 script:
