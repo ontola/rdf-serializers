@@ -42,11 +42,20 @@ module ActiveModelSerializers
         return unless predicate
 
         normalized = value.is_a?(Array) ? value : [value]
-        normalized.compact.map { |v| add_triple([subject, predicate, v, graph]) }
+        normalized.compact.map { |v| add_statement([subject, predicate, v, graph]) }
       end
 
-      def add_triple(triple)
-        @repository << (triple.is_a?(Array) ? normalized_triple(*triple) : triple)
+      def add_statement(statement)
+        @repository << (statement.is_a?(Array) ? array_to_statement(*statement) : statement)
+      end
+
+      def array_to_statement(subject, predicate, object, graph = nil)
+        ::RDF::Statement.new(
+          subject,
+          ::RDF::URI(predicate),
+          normalized_object(object),
+          graph_name: graph || ::RDF::Serializers.config.default_graph
+        )
       end
 
       def attributes_for(serializer, fields)
@@ -60,10 +69,10 @@ module ActiveModelSerializers
         end
       end
 
-      def custom_triples_for(serializer)
-        serializer.class.try(:_triples)&.map do |key|
-          serializer.read_attribute_for_serialization(key).each do |triple|
-            add_triple(triple)
+      def custom_statements_for(serializer)
+        serializer.class.try(:_statements)&.map do |key|
+          serializer.read_attribute_for_serialization(key).each do |statement|
+            add_statement(statement)
           end
         end
       end
@@ -75,7 +84,7 @@ module ActiveModelSerializers
 
         serializers.each { |serializer| process_resource(serializer, @include_directive) }
         serializers.each { |serializer| process_relationships(serializer, @include_directive) }
-        instance_options[:meta]&.each { |meta| add_triple(meta) }
+        instance_options[:meta]&.each { |meta| add_statement(meta) }
 
         raise_missing_nodes if raise_on_missing_nodes?
 
@@ -109,15 +118,6 @@ module ActiveModelSerializers
         else
           ::RDF::Literal(object)
         end
-      end
-
-      def normalized_triple(subject, predicate, object, graph = nil)
-        ::RDF::Statement.new(
-          subject,
-          ::RDF::URI(predicate),
-          normalized_object(object),
-          graph_name: graph || ::RDF::Serializers.config.default_graph
-        )
       end
 
       def process_relationship(serializer, include_slice)
@@ -155,14 +155,14 @@ module ActiveModelSerializers
       def raise_missing_nodes
         return if missing_nodes.empty?
 
-        raise "The following triples point to nodes that are not included in the graph:\n#{missing_nodes.join("\n")}"
+        raise "The following statements point to nodes that are not included in the graph:\n#{missing_nodes.join("\n")}"
       end
 
       def relationships_for(serializer, requested_associations, include_slice)
         include_directive = JSONAPI::IncludeDirective.new(requested_associations, allow_wildcard: true)
         serializer.associations(include_directive, include_slice).each do |association|
-          Relationship.new(serializer, instance_options, association).triples.each do |triple|
-            add_triple(triple)
+          Relationship.new(serializer, instance_options, association).statements.each do |statement|
+            add_statement(statement)
           end
         end
       end
@@ -174,7 +174,7 @@ module ActiveModelSerializers
 
           requested_fields = fieldset&.fields_for(type)
           attributes_for(serializer, requested_fields)
-          custom_triples_for(serializer)
+          custom_statements_for(serializer)
         end
         requested_associations = fieldset.fields_for(type) || '*'
         relationships_for(serializer, requested_associations, include_slice)

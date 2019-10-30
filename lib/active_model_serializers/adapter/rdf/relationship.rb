@@ -4,7 +4,7 @@ module ActiveModelSerializers
   module Adapter
     class RDF
       class Relationship < JsonApi::Relationship
-        def triples
+        def statements
           return [] if no_data?
 
           data.map do |object|

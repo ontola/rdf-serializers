@@ -2,11 +2,15 @@
 
 module ActiveModel
   class Serializer
-    class_attribute :_triples
+    class_attribute :_statements
 
-    def self.triples(attribute)
-      self._triples ||= []
-      self._triples << attribute
+    class << self
+      def statements(attribute)
+        self._statements ||= []
+        self._statements << attribute
+      end
+
+      alias triples statements
     end
   end
 end
