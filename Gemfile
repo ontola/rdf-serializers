@@ -6,7 +6,7 @@ source 'https://rubygems.org'
 local_gemfile = File.join(File.expand_path(__dir__), 'Gemfile.local')
 eval_gemfile local_gemfile if File.readable?(local_gemfile)
 
-# Specify your gem's dependencies in active_model_serializers.gemspec
+# Specify your gem's dependencies in rdf-serializers.gemspec
 gemspec
 
 version = ENV['RAILS_VERSION'] || '6.0'

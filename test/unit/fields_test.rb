@@ -11,34 +11,31 @@ class FieldsTest < ActiveSupport::TestCase
                      author: @author, comments: [@comment1, @comment2])
     @comment1.post = @post
     @comment2.post = @post
-
-    @serializer = PostSerializer.new(@post)
   end
 
   def test_fields_attributes
-    adapter = ActiveModelSerializers::Adapter::RDF.new(@serializer, fields: { posts: [:title] })
+    serializer(@post, fields: { post: [:title] })
+
     assert_ntriples(
-      adapter.dump(:ntriples),
+      serializer.dump(:ntriples),
       '<https://post/1337> <http://test.org/name> "Title 1" .'
     )
   end
 
   def test_fields_relationships
-    adapter = ActiveModelSerializers::Adapter::RDF.new(@serializer, fields: { posts: [:author] })
+    serializer(@post, fields: { post: [:author] })
+
     assert_ntriples(
-      adapter.dump(:ntriples),
+      serializer.dump(:ntriples),
       '<https://post/1337> <http://test.org/author> <https://author/1> .'
     )
   end
 
   def test_fields_included
-    adapter = ActiveModelSerializers::Adapter::RDF.new(
-      @serializer,
-      include: 'comments',
-      fields: { posts: [:author], comments: [:body] }
-    )
+    serializer(@post, include: [:comments], fields: { post: [:author], comment: [:body] })
+
     assert_ntriples(
-      adapter.dump(:ntriples),
+      serializer.dump(:ntriples),
       '<https://comment/7> <http://test.org/text> "cool" .',
       '<https://comment/12> <http://test.org/text> "awesome" .',
       '<https://post/1337> <http://test.org/author> <https://author/1> .'

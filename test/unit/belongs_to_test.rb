@@ -23,25 +23,23 @@ class BelongsToTest < ActiveSupport::TestCase
     @blog.writer = @author
     @blog.articles = [@post, @anonymous_post]
     @author.posts = []
-
-    @serializer = CommentSerializer.new(@comment)
-    @adapter = ActiveModelSerializers::Adapter::RDF.new(@serializer)
-    ActionController::Base.cache_store.clear
   end
 
   def test_includes_post_id
-    adapter = @adapter
+    serializer(@comment)
+
     assert_ntriples(
-      adapter.dump(:ntriples),
+      serializer.dump(:ntriples),
       '<https://comment/1> <http://test.org/text> "ZOMG A COMMENT" .',
       '<https://comment/1> <http://test.org/post> <https://post/42> .'
     )
   end
 
   def test_includes_linked_post
-    adapter = ActiveModelSerializers::Adapter::RDF.new(@serializer, include: [:post])
+    serializer(@comment, include: [:post])
+
     assert_ntriples(
-      adapter.dump(:ntriples),
+      serializer.dump(:ntriples),
       '<https://comment/1> <http://test.org/text> "ZOMG A COMMENT" .',
       '<https://comment/1> <http://test.org/post> <https://post/42> .',
       '<https://post/42> <http://test.org/author> <https://author/1> .',
@@ -53,13 +51,10 @@ class BelongsToTest < ActiveSupport::TestCase
   end
 
   def test_limiting_linked_post_fields
-    adapter = ActiveModelSerializers::Adapter::RDF.new(
-      @serializer,
-      include: [:post],
-      fields: { post: %i[title comments blog author] }
-    )
+    serializer(@comment, include: [:post], fields: { post: %i[title comments blog author] })
+
     assert_ntriples(
-      adapter.dump(:ntriples),
+      serializer.dump(:ntriples),
       '<https://comment/1> <http://test.org/text> "ZOMG A COMMENT" .',
       '<https://comment/1> <http://test.org/post> <https://post/42> .',
       '<https://post/42> <http://test.org/author> <https://author/1> .',
@@ -70,10 +65,10 @@ class BelongsToTest < ActiveSupport::TestCase
   end
 
   def test_include_nil_author
-    serializer = PostSerializer.new(@anonymous_post)
-    adapter = ActiveModelSerializers::Adapter::RDF.new(serializer)
+    serializer(@anonymous_post)
+
     assert_ntriples(
-      adapter.dump(:ntriples),
+      serializer.dump(:ntriples),
       '<https://post/43> <http://test.org/name> "Hello!!" .',
       '<https://post/43> <http://test.org/blog> <https://blog/999> .',
       '<https://post/43> <http://test.org/text> "Hello, world!!" .'

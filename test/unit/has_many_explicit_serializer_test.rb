@@ -19,24 +19,20 @@ class HasManyExplicitSerializerTest < ActiveSupport::TestCase
     @blog = Blog.new(id: 23, name: 'AMS Blog')
     @post.blog = @blog
 
-    @serializer = PostPreviewSerializer.new(@post)
-    @adapter = ActiveModelSerializers::Adapter::RDF.new(
-      @serializer,
-      include: %i[comments author]
-    )
+    @serializer = PostPreviewSerializer.new(@post, include: %i[comments author])
   end
 
   def test_includes_comments
     assert_ntriples(
-      @adapter.dump(:ntriples),
-      '<https://post/post> <http://test.org/comments> <https://comment/1> .',
-      '<https://post/post> <http://test.org/comments> <https://comment/2> .',
-      '<https://post/post> <http://test.org/body> "Body" .',
-      '<https://post/post> <http://test.org/title> "New Post" .',
-      '<https://post/post> <http://test.org/author> <https://author/author> .',
-      '<https://comment/1> <http://test.org/post> <https://post/post> .',
-      '<https://comment/2> <http://test.org/post> <https://post/post> .',
-      '<https://author/author> <http://test.org/posts> <https://post/post> .'
+      @serializer.dump(:ntriples),
+      '<https://post/> <http://test.org/comments> <https://comment/1> .',
+      '<https://post/> <http://test.org/comments> <https://comment/2> .',
+      '<https://post/> <http://test.org/body> "Body" .',
+      '<https://post/> <http://test.org/title> "New Post" .',
+      '<https://post/> <http://test.org/author> <https://author/> .',
+      '<https://comment/1> <http://test.org/post> <https://post/> .',
+      '<https://comment/2> <http://test.org/post> <https://post/> .',
+      '<https://author/> <http://test.org/posts> <https://post/> .'
     )
   end
 
@@ -44,13 +40,13 @@ class HasManyExplicitSerializerTest < ActiveSupport::TestCase
     @post.author = nil
 
     assert_ntriples(
-      @adapter.dump(:ntriples),
-      '<https://post/post> <http://test.org/comments> <https://comment/1> .',
-      '<https://post/post> <http://test.org/comments> <https://comment/2> .',
-      '<https://post/post> <http://test.org/body> "Body" .',
-      '<https://post/post> <http://test.org/title> "New Post" .',
-      '<https://comment/1> <http://test.org/post> <https://post/post> .',
-      '<https://comment/2> <http://test.org/post> <https://post/post> .'
+      @serializer.dump(:ntriples),
+      '<https://post/> <http://test.org/comments> <https://comment/1> .',
+      '<https://post/> <http://test.org/comments> <https://comment/2> .',
+      '<https://post/> <http://test.org/body> "Body" .',
+      '<https://post/> <http://test.org/title> "New Post" .',
+      '<https://comment/1> <http://test.org/post> <https://post/> .',
+      '<https://comment/2> <http://test.org/post> <https://post/> .'
     )
   end
 
@@ -58,11 +54,11 @@ class HasManyExplicitSerializerTest < ActiveSupport::TestCase
     @post.comments = []
 
     assert_ntriples(
-      @adapter.dump(:ntriples),
-      '<https://post/post> <http://test.org/body> "Body" .',
-      '<https://post/post> <http://test.org/title> "New Post" .',
-      '<https://post/post> <http://test.org/author> <https://author/author> .',
-      '<https://author/author> <http://test.org/posts> <https://post/post> .'
+      @serializer.dump(:ntriples),
+      '<https://post/> <http://test.org/body> "Body" .',
+      '<https://post/> <http://test.org/title> "New Post" .',
+      '<https://post/> <http://test.org/author> <https://author/> .',
+      '<https://author/> <http://test.org/posts> <https://post/> .'
     )
   end
 end

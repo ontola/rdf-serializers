@@ -5,7 +5,11 @@ require 'test_helper'
 class ControllerTest < ActionController::TestCase
   class TestController < ActionController::Base
     def render_array
-      render nt: [[post], profile]
+      render nt: [post, post2]
+    end
+
+    def render_mixed_array
+      render nt: [post, profile]
     end
 
     def render_ntriples
@@ -26,6 +30,14 @@ class ControllerTest < ActionController::TestCase
       )
     end
 
+    def post2
+      @post = Post.new(
+        id: 3,
+        title: 'Second post',
+        body: 'Text'
+      )
+    end
+
     def profile
       @profile = Profile.new(
         id: 1,
@@ -40,6 +52,20 @@ class ControllerTest < ActionController::TestCase
 
   def test_render_array
     get :render_array
+
+    assert_ntriples(
+      response.body,
+      '<https://post/2> <http://test.org/name> "Nice" .',
+      '<https://post/2> <http://test.org/text> "Some plea" .',
+      '<https://post/2> <http://test.org/blog> <https://blog/999> .',
+      '<https://post/3> <http://test.org/name> "Second post" .',
+      '<https://post/3> <http://test.org/text> "Text" .',
+      '<https://post/3> <http://test.org/blog> <https://blog/999> .'
+    )
+  end
+
+  def test_render_mixed_array
+    get :render_mixed_array
 
     assert_ntriples(
       response.body,

@@ -3,7 +3,9 @@
 require 'test_helper'
 
 class NestedPost < ::Model; associations :nested_posts end
-class NestedPostSerializer < ActiveModel::Serializer
+class NestedPostSerializer
+  include RDF::Serializers::ObjectSerializer
+
   has_many :nested_posts
 end
 
@@ -40,16 +42,15 @@ class LinkedTest < ActiveSupport::TestCase
     @author2.roles = []
     @bio1.author = @author1
     @bio2.author = @author2
+    @posts_array = [@first_post, @second_post]
+    @comments_array = [@first_comment, @second_comment]
   end
 
   def test_include_multiple_posts_and_linked_array
-    serializer = ActiveModel::Serializer::CollectionSerializer.new([@first_post, @second_post])
-    adapter = ActiveModelSerializers::Adapter::RDF.new(
-      serializer,
-      include: [:comments, author: [:bio]]
-    )
+    serializer(@posts_array, include: [:comments, author: [:bio]])
+
     assert_ntriples(
-      adapter.dump(:ntriples),
+      serializer.dump(:ntriples),
       '<https://bio/2> <http://test.org/content> "Rails Contributor" .',
       '<https://bio/2> <http://test.org/author> <https://author/2> .',
       '<https://author/2> <http://test.org/id> "2"^^<http://www.w3.org/2001/XMLSchema#integer> .',
@@ -81,13 +82,10 @@ class LinkedTest < ActiveSupport::TestCase
   end
 
   def test_include_multiple_posts_and_linked
-    serializer = BioSerializer.new @bio1
-    adapter = ActiveModelSerializers::Adapter::RDF.new(
-      serializer,
-      include: [author: [:posts]]
-    )
+    serializer(@bio1, include: [author: [:posts]])
+
     assert_ntriples(
-      adapter.dump(:ntriples),
+      serializer.dump(:ntriples),
       '<https://author/1> <http://test.org/id> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .',
       '<https://author/1> <http://test.org/posts> <https://post/30> .',
       '<https://author/1> <http://test.org/posts> <https://post/10> .',
@@ -111,23 +109,20 @@ class LinkedTest < ActiveSupport::TestCase
   def test_underscore_model_namespace_for_linked_resource_type
     spammy_post = Post.new(id: 123)
     spammy_post.related = [Spam::UnrelatedLink.new(id: 456)]
-    serializer = SpammyPostSerializer.new(spammy_post)
-    adapter = ActiveModelSerializers::Adapter::RDF.new(serializer)
+
+    @serializer = SpammyPostSerializer.new(spammy_post)
+
     assert_ntriples(
-      adapter.dump(:ntriples),
+      @serializer.dump(:ntriples),
       '<https://post/123> <http://test.org/related> <https://spam/unrelated_link/456> .'
     )
   end
 
   def test_multiple_references_to_same_resource
-    serializer = ActiveModel::Serializer::CollectionSerializer.new([@first_comment, @second_comment])
-    adapter = ActiveModelSerializers::Adapter::RDF.new(
-      serializer,
-      include: [:post]
-    )
+    serializer(@comments_array, include: [:post])
 
     assert_ntriples(
-      adapter.dump(:ntriples),
+      serializer.dump(:ntriples),
       '<https://comment/1> <http://test.org/text> "ZOMG A COMMENT" .',
       '<https://comment/1> <http://test.org/post> <https://post/10> .',
       '<https://post/10> <http://test.org/text> "Hello, world!!" .',
@@ -143,14 +138,10 @@ class LinkedTest < ActiveSupport::TestCase
 
   def test_nil_link_with_specified_serializer
     @first_post.author = nil
-    serializer = PostPreviewSerializer.new(@first_post)
-    adapter = ActiveModelSerializers::Adapter::RDF.new(
-      serializer,
-      include: [:author]
-    )
+    @serializer = PostPreviewSerializer.new(@first_post, include: [:author])
 
     assert_ntriples(
-      adapter.dump(:ntriples),
+      @serializer.dump(:ntriples),
       '<https://post/10> <http://test.org/title> "Hello!!" .',
       '<https://post/10> <http://test.org/body> "Hello, world!!" .',
       '<https://post/10> <http://test.org/comments> <https://comment/2> .',

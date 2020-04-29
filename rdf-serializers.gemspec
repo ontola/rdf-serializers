@@ -19,7 +19,7 @@ Gem::Specification.new do |s|
   s.homepage = 'https://github.com/ontola/rdf-serializers'
   s.require_paths = ['lib']
 
-  s.add_runtime_dependency 'active_model_serializers', '~> 0.10'
+  s.add_runtime_dependency 'fast_jsonapi'
   s.add_runtime_dependency 'railties', '>= 4.2.0', '< 7'
   s.add_runtime_dependency 'rdf', '~> 3.0'
 end

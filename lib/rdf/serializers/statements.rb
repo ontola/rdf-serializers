@@ -19,11 +19,9 @@ module RDF
         def statements(attribute)
           self._statements << attribute
         end
-
-        alias triples statements
       end
     end
   end
 end
 
-ActiveModel::Serializer.include(RDF::Serializers::Statements)
+FastJsonapi::ObjectSerializer.include(RDF::Serializers::Statements)

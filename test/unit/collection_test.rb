@@ -16,16 +16,14 @@ class CollectionTest < ActiveSupport::TestCase
     @first_post.author = @author
     @second_post.author = @author
     @author.posts = [@first_post, @second_post]
-
-    @serializer = ActiveModel::Serializer::CollectionSerializer.new([@first_post, @second_post])
-    @adapter = ActiveModelSerializers::Adapter::RDF.new(@serializer)
-    ActionController::Base.cache_store.clear
+    @posts_array = [@first_post, @second_post]
   end
 
   def test_include_multiple_posts
-    adapter = @adapter
+    serializer(@posts_array)
+
     assert_ntriples(
-      adapter.dump(:ntriples),
+      serializer.dump(:ntriples),
       '<https://post/1> <http://test.org/author> <https://author/1> .',
       '<https://post/1> <http://test.org/name> "Hello!!" .',
       '<https://post/1> <http://test.org/blog> <https://blog/999> .',
@@ -38,12 +36,10 @@ class CollectionTest < ActiveSupport::TestCase
   end
 
   def test_limiting_fields
-    adapter = ActiveModelSerializers::Adapter::RDF.new(
-      @serializer,
-      fields: { post: %w[title comments blog author] }
-    )
+    serializer(@posts_array, fields: { post: %w[title comments blog author] })
+
     assert_ntriples(
-      adapter.dump(:ntriples),
+      serializer.dump(:ntriples),
       '<https://post/1> <http://test.org/author> <https://author/1> .',
       '<https://post/1> <http://test.org/name> "Hello!!" .',
       '<https://post/1> <http://test.org/blog> <https://blog/999> .',
@@ -54,32 +50,10 @@ class CollectionTest < ActiveSupport::TestCase
   end
 
   def test_mixed_models
-    serializer = ActiveModel::Serializer::CollectionSerializer.new([@first_post, @blog, @author])
-    adapter = ActiveModelSerializers::Adapter::RDF.new(serializer)
+    serializer([@first_post, @blog, @author])
 
     assert_ntriples(
-      adapter.dump(:ntriples),
-      # post 1
-      '<https://post/1> <http://test.org/author> <https://author/1> .',
-      '<https://post/1> <http://test.org/name> "Hello!!" .',
-      '<https://post/1> <http://test.org/text> "Hello, world!!" .',
-      '<https://post/1> <http://test.org/blog> <https://blog/999> .',
-      # blog
-      '<https://blog/23> <http://test.org/name> "AMS Blog" .',
-      # author
-      '<https://author/1> <http://test.org/id> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .',
-      '<https://author/1> <http://test.org/name> "Steve K." .',
-      '<https://author/1> <http://test.org/posts> <https://post/2> .',
-      '<https://author/1> <http://test.org/posts> <https://post/1> .'
-    )
-  end
-
-  def test_nested_mixed_models
-    serializer = ActiveModel::Serializer::CollectionSerializer.new([[@first_post], [@blog], [@author]])
-    adapter = ActiveModelSerializers::Adapter::RDF.new(serializer)
-
-    assert_ntriples(
-      adapter.dump(:ntriples),
+      serializer.dump(:ntriples),
       # post 1
       '<https://post/1> <http://test.org/author> <https://author/1> .',
       '<https://post/1> <http://test.org/name> "Hello!!" .',

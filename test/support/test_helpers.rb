@@ -13,6 +13,13 @@ module TestHelpers
       "Expected to find #{triples.count} triple(s), but found #{triple_count}:\n#{body}"
     )
   end
+
+  def serializer(resource = nil, options = {})
+    @serializer ||=
+      RDF::Serializers
+      .serializer_for(resource)
+      .new(resource, RDF::Serializers::Renderers.transform_opts(options, {}))
+  end
 end
 
 module ActiveSupport

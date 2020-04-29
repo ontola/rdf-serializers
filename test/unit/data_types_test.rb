@@ -4,30 +4,24 @@ require 'test_helper'
 
 class DataTypesTest < ActiveSupport::TestCase
   class Resource < Model
-    attributes :attr
+    attr_accessor :attr
   end
   class ResourceSerializer < ApplicationSerializer
     attribute :attr, predicate: RDF::TEST[:attr]
-
-    def rdf_subject
-      RDF::URI('https://example.com')
-    end
   end
 
   def setup
     @resource = Resource.new
     @serializer = ResourceSerializer.new(@resource)
-    @adapter = ActiveModelSerializers::Adapter::RDF.new(@serializer)
-    ActionController::Base.cache_store.clear
   end
 
   def test_array
     @resource.attr = [1, '2']
 
     assert_ntriples(
-      @adapter.dump(:ntriples),
-      '<https://example.com> <http://test.org/attr> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .',
-      '<https://example.com> <http://test.org/attr> "2" .'
+      @serializer.dump(:ntriples),
+      '<https://data_types_test/resource/> <http://test.org/attr> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .',
+      '<https://data_types_test/resource/> <http://test.org/attr> "2" .'
     )
   end
 
@@ -35,8 +29,8 @@ class DataTypesTest < ActiveSupport::TestCase
     @resource.attr = true
 
     assert_ntriples(
-      @adapter.dump(:ntriples),
-      '<https://example.com> <http://test.org/attr> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .'
+      @serializer.dump(:ntriples),
+      '<https://data_types_test/resource/> <http://test.org/attr> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .'
     )
   end
 
@@ -44,8 +38,8 @@ class DataTypesTest < ActiveSupport::TestCase
     @resource.attr = Date.new
 
     assert_ntriples(
-      @adapter.dump(:ntriples),
-      "<https://example.com> <http://test.org/attr> \"#{@resource.attr.strftime('%F')}\""\
+      @serializer.dump(:ntriples),
+      "<https://data_types_test/resource/> <http://test.org/attr> \"#{@resource.attr.strftime('%F')}\""\
       '^^<http://www.w3.org/2001/XMLSchema#date> .'
     )
   end
@@ -54,8 +48,8 @@ class DataTypesTest < ActiveSupport::TestCase
     @resource.attr = DateTime.new
 
     assert_ntriples(
-      @adapter.dump(:ntriples),
-      "<https://example.com> <http://test.org/attr> \"#{@resource.attr.strftime('%FT%TZ')}\""\
+      @serializer.dump(:ntriples),
+      "<https://data_types_test/resource/> <http://test.org/attr> \"#{@resource.attr.strftime('%FT%TZ')}\""\
       '^^<http://www.w3.org/2001/XMLSchema#dateTime> .'
     )
   end
@@ -64,8 +58,8 @@ class DataTypesTest < ActiveSupport::TestCase
     @resource.attr = RDF::Literal::Decimal.new(1)
 
     assert_ntriples(
-      @adapter.dump(:ntriples),
-      '<https://example.com> <http://test.org/attr> "1.0"^^<http://www.w3.org/2001/XMLSchema#decimal> .'
+      @serializer.dump(:ntriples),
+      '<https://data_types_test/resource/> <http://test.org/attr> "1.0"^^<http://www.w3.org/2001/XMLSchema#decimal> .'
     )
   end
 
@@ -73,8 +67,8 @@ class DataTypesTest < ActiveSupport::TestCase
     @resource.attr = 1.0
 
     assert_ntriples(
-      @adapter.dump(:ntriples),
-      '<https://example.com> <http://test.org/attr> "1.0"^^<http://www.w3.org/2001/XMLSchema#double> .'
+      @serializer.dump(:ntriples),
+      '<https://data_types_test/resource/> <http://test.org/attr> "1.0"^^<http://www.w3.org/2001/XMLSchema#double> .'
     )
   end
 
@@ -82,8 +76,8 @@ class DataTypesTest < ActiveSupport::TestCase
     @resource.attr = 1
 
     assert_ntriples(
-      @adapter.dump(:ntriples),
-      '<https://example.com> <http://test.org/attr> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .'
+      @serializer.dump(:ntriples),
+      '<https://data_types_test/resource/> <http://test.org/attr> "1"^^<http://www.w3.org/2001/XMLSchema#integer> .'
     )
   end
 
@@ -92,8 +86,8 @@ class DataTypesTest < ActiveSupport::TestCase
     expected = @resource.attr.strftime(RDF::Literal::DateTime::FORMAT).sub('+00:00', 'Z').sub('.000', '')
 
     assert_ntriples(
-      @adapter.dump(:ntriples),
-      "<https://example.com> <http://test.org/attr> \"#{expected}\""\
+      @serializer.dump(:ntriples),
+      "<https://data_types_test/resource/> <http://test.org/attr> \"#{expected}\""\
       '^^<http://www.w3.org/2001/XMLSchema#dateTime> .'
     )
   end
@@ -102,8 +96,8 @@ class DataTypesTest < ActiveSupport::TestCase
     @resource.attr = :symbol
 
     assert_ntriples(
-      @adapter.dump(:ntriples),
-      '<https://example.com> <http://test.org/attr> "symbol"^^<http://www.w3.org/2001/XMLSchema#token> .'
+      @serializer.dump(:ntriples),
+      '<https://data_types_test/resource/> <http://test.org/attr> "symbol"^^<http://www.w3.org/2001/XMLSchema#token> .'
     )
   end
 end

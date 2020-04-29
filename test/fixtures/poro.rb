@@ -1,9 +1,11 @@
 # frozen_string_literal: true
 
-class Model < ActiveModelSerializers::Model
-  rand(2).zero? && derive_attributes_from_names_and_fix_accessors
+require 'active_model'
 
-  attr_writer :id
+class Model
+  include ::ActiveModel::Model
+
+  attr_accessor :id
 
   # At this time, just for organization of intent
   class_attribute :association_names
@@ -11,10 +13,8 @@ class Model < ActiveModelSerializers::Model
 
   def self.associations(*names)
     self.association_names |= names.map(&:to_sym)
-    # Silence redefinition of methods warnings
-    ActiveModelSerializers.silence_warnings do
-      attr_accessor(*names)
-    end
+
+    attr_accessor(*names)
   end
 
   def associations
@@ -23,23 +23,21 @@ class Model < ActiveModelSerializers::Model
     end.with_indifferent_access.freeze
   end
 
-  def attributes
-    super.except(*association_names)
+  def iri
+    RDF::URI("https://#{self.class.name.underscore}/#{id}")
   end
 end
 
-class ApplicationSerializer < ActiveModel::Serializer
-  def rdf_subject
-    RDF::URI("https://#{object.class.name.underscore}/#{object.id}")
-  end
+class ApplicationSerializer
+  include RDF::Serializers::ObjectSerializer
 end
 
 class ModelWithErrors < Model
-  attributes :name
+  attr_accessor :name
 end
 
 class Profile < Model
-  attributes :name, :description
+  attr_accessor :name, :description
   associations :comments
 end
 class ProfileSerializer < ApplicationSerializer
@@ -48,11 +46,10 @@ class ProfileSerializer < ApplicationSerializer
 end
 
 class Author < Model
-  attributes :name, :birthday, :active
+  attr_accessor :name, :birthday, :active
   associations :posts, :bio, :roles, :comments
 end
 class AuthorSerializer < ApplicationSerializer
-  cache key: 'writer', skip_digest: true
   attribute :id, predicate: RDF::TEST[:id]
   attribute :name, predicate: RDF::TEST[:name]
   attribute :birthday, predicate: RDF::TEST[:birthday]
@@ -68,11 +65,10 @@ class AuthorPreviewSerializer < ApplicationSerializer
 end
 
 class Comment < Model
-  attributes :body, :date
+  attr_accessor :body, :date
   associations :post, :author, :likes
 end
 class CommentSerializer < ApplicationSerializer
-  cache expires_in: 1.day, skip_digest: true
   attributes :id
   attribute :body, predicate: RDF::TEST[:text]
   belongs_to :post, predicate: RDF::TEST[:post]
@@ -85,24 +81,25 @@ class CommentPreviewSerializer < ApplicationSerializer
 end
 
 class Post < Model
-  attributes :title, :body
+  attr_accessor :title, :body
   associations :author, :comments, :blog, :tags, :related
 end
 class PostSerializer < ApplicationSerializer
-  cache key: 'post', expires_in: 0.1, skip_digest: true
   attribute :title, predicate: RDF::TEST[:name]
   attribute :body, predicate: RDF::TEST[:text]
   belongs_to :author, predicate: RDF::TEST[:author]
-  belongs_to :blog, predicate: RDF::TEST[:blog]
-  has_many :comments, predicate: RDF::TEST[:comments]
-
-  def blog
+  belongs_to :blog, predicate: RDF::TEST[:blog] do
     Blog.new(id: 999, name: 'Custom blog')
   end
+  has_many :comments, predicate: RDF::TEST[:comments]
+end
+class PostWithTagsSerializer < ApplicationSerializer
+  attribute :title, predicate: RDF::TEST[:name]
+  has_many :tags, predicate: RDF::TEST[:tags]
 end
 class SpammyPostSerializer < ApplicationSerializer
   attributes :id
-  has_many :related, predicate: RDF::TEST[:related]
+  has_many :related, predicate: RDF::TEST[:related], polymorphic: true
 end
 class PostPreviewSerializer < ApplicationSerializer
   attributes :id
@@ -114,11 +111,10 @@ class PostPreviewSerializer < ApplicationSerializer
 end
 
 class Bio < Model
-  attributes :content, :rating
+  attr_accessor :content, :rating
   associations :author
 end
 class BioSerializer < ApplicationSerializer
-  cache except: [:content], skip_digest: true
   attributes :id
   attribute :content, predicate: RDF::TEST[:content]
   attribute :rating, predicate: RDF::TEST[:rating]
@@ -127,40 +123,35 @@ class BioSerializer < ApplicationSerializer
 end
 
 class Blog < Model
-  attributes :name, :type, :special_attribute
+  attr_accessor :name, :type, :special_attribute
   associations :writer, :articles
 end
 class BlogSerializer < ApplicationSerializer
-  cache key: 'blog'
   attributes :id
   attribute :name, predicate: RDF::TEST[:name]
 
-  belongs_to :writer, predicate: RDF::TEST[:writer]
-  has_many :articles, predicate: RDF::TEST[:article]
+  belongs_to :writer, predicate: RDF::TEST[:writer], serializer: AuthorSerializer
+  has_many :articles, predicate: RDF::TEST[:article], serializer: PostSerializer
 end
 
 class Role < Model
-  attributes :name, :description, :special_attribute
+  attr_accessor :name, :description, :special_attribute
   associations :author
 end
 class RoleSerializer < ApplicationSerializer
-  cache only: %i[name slug], skip_digest: true
   attributes :id
   attribute :name, predicate: RDF::TEST[:name]
   attribute :description, predicate: RDF::TEST[:description]
-  attribute :friendly_id, key: :slug, predicate: RDF::TEST[:friendly_id]
-  belongs_to :author, predicate: RDF::TEST[:author]
-
-  def friendly_id
+  attribute :friendly_id, key: :slug, predicate: RDF::TEST[:friendly_id] do
     "#{object.name}-#{object.id}"
   end
+  belongs_to :author, predicate: RDF::TEST[:author]
 end
 
 module Spam
   class UnrelatedLink < Model
   end
   class UnrelatedLinkSerializer < ApplicationSerializer
-    cache only: [:id]
     attributes :id
   end
 end

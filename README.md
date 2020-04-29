@@ -4,7 +4,7 @@
 
 ## About
 
-RDF Serializers enables serialization to RDF formats. It uses your existing [active_model_serializers](https://github.com/rails-api/active_model_serializers) serializers, with a few modifications.
+RDF Serializers enables serialization to RDF formats. It uses [fast-jsonapi](https://github.com/fast-jsonapi/fast_jsonapi) serializers, with a few modifications.
 The serialization itself is done by the [rdf](https://github.com/ruby-rdf/rdf) gem.
 
 This was built at [Ontola](https://ontola.io/). If you want to know more about our passion for open data, send us [an e-mail](mailto:ontola@argu.co).
@@ -101,7 +101,8 @@ Now add the predicates to your serializers.
 
 Old: 
 ```ruby
-class PostSerializer < ActiveModel::Serializer
+class PostSerializer
+  include FastJsonapi::ObjectSerializer
   attributes :title, :body
   belongs_to :author
   has_many :comments
@@ -110,7 +111,8 @@ end
 
 New:
 ```ruby
-class PostSerializer < ActiveModel::Serializer
+class PostSerializer
+  include RDF::Serializers::ObjectSerializer
   attribute :title, predicate: NS::SCHEMA[:name]
   attribute :body, predicate: NS::SCHEMA[:text]
   belongs_to :author, predicate: NS::MY_VOCAB[:author]
@@ -118,9 +120,9 @@ class PostSerializer < ActiveModel::Serializer
 end
 ```
 
-For RDF serialization, you are required to add an `rdf_subject` method to your serializer or model, which must return a `RDF::Resource`. For example:
+For RDF serialization, you are required to add an `iri` method to your model, which must return a `RDF::Resource`. For example:
 ```ruby
-  def rdf_subject
+  def iri
     RDF::URI(Rails.application.routes.url_helpers.comment_url(object))
   end
 ```
@@ -132,7 +134,8 @@ It's recommended to add `attribute :type, predicate: RDF[:type]` and a method de
 
 You can add custom statements to the serialization of a model in the serializer, for example:
 ```ruby
-class PostSerializer < ActiveModel::Serializer
+class PostSerializer
+  include RDF::Serializers::ObjectSerializer
   statements :my_custom_statements
   
   def my_custom_statements

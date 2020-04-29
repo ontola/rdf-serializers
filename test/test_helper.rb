@@ -10,7 +10,6 @@ require 'rdf'
 require 'action_controller'
 require 'action_controller/test_case'
 require 'action_controller/railtie'
-require 'active_model_serializers'
 require 'rdf/serializers'
 require 'fileutils'
 FileUtils.mkdir_p(File.expand_path('../tmp/cache', __dir__))
@@ -22,8 +21,6 @@ require 'minitest/autorun'
 RDF::TEST = RDF::Vocabulary.new('http://test.org/')
 
 require 'support/rails_app'
-
-require 'support/before_setup'
 
 require 'support/rails5_shims'
 
