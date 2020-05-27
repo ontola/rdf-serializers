@@ -79,7 +79,7 @@ module RDF
       def serializer_lookup_chain_for(klass, namespace = nil)
         lookups = config.serializer_lookup_chain
         Array[*lookups].flat_map do |lookup|
-          lookup.call(klass, self, namespace)
+          lookup.call(klass, namespace)
         end.compact
       end
     end

@@ -8,7 +8,7 @@ module RDF
       #
       # Example:
       #   Author => AuthorSerializer
-      BY_RESOURCE = lambda do |resource_class, _serializer_class, _namespace|
+      BY_RESOURCE = lambda do |resource_class, _namespace|
         serializer_from(resource_class)
       end
 
@@ -16,7 +16,7 @@ module RDF
       #
       # Example:
       #  British::Author => British::AuthorSerializer
-      BY_RESOURCE_NAMESPACE = lambda do |resource_class, _serializer_class, _namespace|
+      BY_RESOURCE_NAMESPACE = lambda do |resource_class, _namespace|
         resource_namespace = namespace_for(resource_class)
         serializer_name = serializer_from(resource_class)
 
@@ -27,38 +27,12 @@ module RDF
       #
       # Example:
       #  Api::V3::AuthorsController => Api::V3::AuthorSerializer
-      BY_NAMESPACE = lambda do |resource_class, _serializer_class, namespace|
+      BY_NAMESPACE = lambda do |resource_class, namespace|
         resource_name = resource_class_name(resource_class)
         namespace ? "#{namespace}::#{resource_name}Serializer" : nil
       end
 
-      # Allows for serializers to be defined in parent serializers
-      # - useful if a relationship only needs a different set of attributes
-      #   than if it were rendered independently.
-      #
-      # Example:
-      #   class BlogSerializer
-      #     include RDF::Serializers::ObjectSerializer
-      #     class AuthorSerialier
-      #       include RDF::Serializers::ObjectSerializer
-      #       ...
-      #     end
-      #
-      #     belongs_to :author
-      #     ...
-      #   end
-      #
-      #  The belongs_to relationship would be rendered with
-      #    BlogSerializer::AuthorSerialier
-      BY_PARENT_SERIALIZER = lambda do |resource_class, serializer_class, _namespace|
-        return if serializer_class.include?(FastJsonapi::SerializationCore)
-
-        serializer_name = serializer_from(resource_class)
-        "#{serializer_class}::#{serializer_name}"
-      end
-
       DEFAULT = [
-        BY_PARENT_SERIALIZER,
         BY_NAMESPACE,
         BY_RESOURCE_NAMESPACE,
         BY_RESOURCE
