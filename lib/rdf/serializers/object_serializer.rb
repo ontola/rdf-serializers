@@ -87,9 +87,9 @@ module RDF
 
         @meta.map do |statement|
           if statement.is_a?(Array)
-            value_to_hex(statement[0], statement[1], statement[2], statement[3])
+            value_to_hex(statement[0], statement[1], statement[2], statement[3], @params)
           else
-            value_to_hex(statement.subject.to_s, statement.predicate, statement.object, statement.graph_name)
+            value_to_hex(statement.subject.to_s, statement.predicate, statement.object, statement.graph_name, @params)
           end
         end.compact
       end

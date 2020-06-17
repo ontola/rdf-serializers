@@ -22,15 +22,15 @@ module RDF
         return [] if value.nil?
 
         if value.is_a?(Array)
-          value.map { |arr_item| value_to_hex(iri_from_record(record).to_s, predicate, arr_item) }
+          value.map { |arr_item| value_to_hex(iri_from_record(record).to_s, predicate, arr_item, nil, serialization_params) }
         elsif value.is_a?(::RDF::List)
           value.statements.map do |statement|
-            value_to_hex(statement.subject.to_s, statement.predicate, statement.object, statement.graph_name)
+            value_to_hex(statement.subject.to_s, statement.predicate, statement.object, statement.graph_name, serialization_params)
           end + [
-            value_to_hex(iri_from_record(record).to_s, predicate, value.statements.first.subject)
+            value_to_hex(iri_from_record(record).to_s, predicate, value.statements.first.subject, nil, serialization_params)
           ]
         else
-          [value_to_hex(iri_from_record(record).to_s, predicate, value)]
+          [value_to_hex(iri_from_record(record).to_s, predicate, value, nil, serialization_params)]
         end
       end
 

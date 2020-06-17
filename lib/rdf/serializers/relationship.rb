@@ -12,26 +12,28 @@ module RDF
 
         iris = iris_from_record_and_relationship(record, serialization_params)
 
-        sequence ? relationship_sequence(record, iris) : relationship_statements(record, iris)
+        sequence ? relationship_sequence(record, iris, serialization_params) : relationship_statements(record, iris, serialization_params)
       end
 
-      def relationship_sequence(record, iris)
+      def relationship_sequence(record, iris, serialization_params)
         sequence = RDF::Node.new
 
         [
-          value_to_hex(iri_from_record(record).to_s, predicate, sequence),
-          value_to_hex(sequence, RDF.type, RDF.Seq)
+          value_to_hex(iri_from_record(record).to_s, predicate, sequence, nil, serialization_params),
+          value_to_hex(sequence, RDF.type, RDF.Seq, nil, serialization_params)
         ] + iris.map.with_index do |iri, index|
-          value_to_hex(sequence, RDF["_#{index}"], iri)
+          value_to_hex(sequence, RDF["_#{index}"], iri, nil, serialization_params)
         end
       end
 
-      def relationship_statements(record, iris)
+      def relationship_statements(record, iris, serialization_params)
         iris.map do |related_iri|
           value_to_hex(
             iri_from_record(record).to_s,
             predicate,
-            related_iri
+            related_iri,
+            nil,
+            serialization_params
           )
         end
       end

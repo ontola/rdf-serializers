@@ -45,7 +45,7 @@ module RDF
         end
       end
 
-      def value_to_hex(iri, predicate, object, graph = nil)
+      def value_to_hex(iri, predicate, object, graph = nil, serialization_params = {})
         return if object.nil?
 
         obj = normalized_object(object)
@@ -56,8 +56,15 @@ module RDF
           object_value(obj),
           object_datatype(obj),
           obj.try(:language) || '',
-          (graph || ::RDF::Serializers.config.default_graph)&.value
+          operation((graph || ::RDF::Serializers.config.default_graph)&.value, serialization_params[:context])
         ]
+      end
+
+      def operation(operation, graph_name)
+        return nil if operation.blank?
+        return operation if graph_name.blank?
+
+        "#{operation}?graph=#{WEBrick::HTTPUtils.escape_form(graph_name.to_s)}"
       end
     end
   end
