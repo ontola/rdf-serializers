@@ -158,10 +158,12 @@ module RDF
           association = options.delete(:association)
           image = options.delete(:image)
           predicate = options.delete(:predicate)
+          sequence = options.delete(:sequence)
           relation = super
           relation.association = association
           relation.image = image
           relation.predicate = predicate
+          relation.sequence = sequence
 
           relation
         end

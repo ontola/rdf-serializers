@@ -5,24 +5,41 @@ module RDF
     module Relationship
       include HextupleSerializer
 
-      attr_accessor :predicate, :image, :association
+      attr_accessor :predicate, :image, :association, :sequence
 
       def serialize_hex(record, included, serialization_params)
-        return [] unless include_relationship?(record, serialization_params) && predicate.present?
+        return [] unless include_relationship?(record, serialization_params, included) && predicate.present?
 
-        statements = []
+        iris = iris_from_record_and_relationship(record, serialization_params)
 
-        unless lazy_load_data && !included
-          iris_from_record_and_relationship(record, serialization_params).each do |related_iri|
-            statements << value_to_hex(
-              iri_from_record(record).to_s,
-              predicate,
-              related_iri
-            )
-          end
+        sequence ? relationship_sequence(record, iris) : relationship_statements(record, iris)
+      end
+
+      def relationship_sequence(record, iris)
+        sequence = RDF::Node.new
+
+        [
+          value_to_hex(iri_from_record(record).to_s, predicate, sequence),
+          value_to_hex(sequence, RDF.type, RDF.Seq)
+        ] + iris.map.with_index do |iri, index|
+          value_to_hex(sequence, RDF["_#{index}"], iri)
         end
+      end
 
-        statements.compact
+      def relationship_statements(record, iris)
+        iris.map do |related_iri|
+          value_to_hex(
+            iri_from_record(record).to_s,
+            predicate,
+            related_iri
+          )
+        end
+      end
+
+      def include_relationship?(record, serialization_params, included = false)
+        return false if lazy_load_data && !included
+
+        super(record, serialization_params)
       end
 
       def iris_from_record_and_relationship(record, params = {})

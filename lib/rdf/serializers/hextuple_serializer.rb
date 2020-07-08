@@ -51,7 +51,7 @@ module RDF
         obj = normalized_object(object)
 
         [
-          iri,
+          iri.to_s,
           predicate.to_s,
           object_value(obj),
           object_datatype(obj),
