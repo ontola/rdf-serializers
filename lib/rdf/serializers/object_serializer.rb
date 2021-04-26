@@ -3,16 +3,8 @@
 module RDF
   module Serializers
     module ObjectSerializer
-      HEX_SUBJECT = 0
-      HEX_PREDICATE = 1
-      HEX_OBJECT = 2
-      HEX_DATATYPE = 3
-      HEX_LANGUAGE = 4
-      HEX_GRAPH = 5
-
       extend ActiveSupport::Concern
       include FastJsonapi::ObjectSerializer
-      include DataTypeHelper
       include SerializationCore
 
       def dump(*args, **options)
@@ -98,32 +90,10 @@ module RDF
         return @repository if @repository.present?
 
         @repository = ::RDF::Repository.new
+        parser = HndJSONParser.new
 
         serializable_hextuples.compact.each do |hextuple|
-          object =
-            case hextuple[HEX_DATATYPE]
-            when 'http://www.w3.org/1999/02/22-rdf-syntax-ns#namedNode'
-              RDF::URI.new(hextuple[HEX_OBJECT])
-            when 'http://www.w3.org/1999/02/22-rdf-syntax-ns#blankNode'
-              blank_node(hextuple[HEX_OBJECT].sub('_:', ''))
-            else
-              xsd_to_rdf(hextuple[HEX_DATATYPE], hextuple[HEX_OBJECT], language: hextuple[HEX_LANGUAGE].presence)
-            end
-          subject =
-            if hextuple[HEX_SUBJECT].is_a?(RDF::Resource)
-              hextuple[HEX_SUBJECT]
-            elsif hextuple[HEX_SUBJECT].start_with?('_')
-              blank_node(hextuple[HEX_SUBJECT].sub('_:', ''))
-            else
-              RDF::URI(hextuple[HEX_SUBJECT])
-            end
-
-          @repository << RDF::Statement.new(
-            subject,
-            RDF::URI(hextuple[HEX_PREDICATE]),
-            object,
-            graph_name: hextuple[HEX_GRAPH] && RDF::URI(hextuple[HEX_GRAPH])
-          )
+          @repository << parser.parse_hex(hextuple)
         end
 
         @repository
