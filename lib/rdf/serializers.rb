@@ -74,7 +74,7 @@ module RDF
       # Used to cache serializer name => serializer class
       # when looked up by Serializer.get_serializer_for.
       def serializers_cache
-        @serializers_cache ||= ThreadSafe::Cache.new
+        @serializers_cache ||= Concurrent::Map.new
       end
 
       def serializer_lookup_chain_for(klass, namespace = nil)
