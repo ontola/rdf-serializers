@@ -102,7 +102,7 @@ Now add the predicates to your serializers.
 Old: 
 ```ruby
 class PostSerializer
-  include FastJsonapi::ObjectSerializer
+  include JSONAPI::Serializer
   attributes :title, :body
   belongs_to :author
   has_many :comments

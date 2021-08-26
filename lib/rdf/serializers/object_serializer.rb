@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'oj'
+
 module RDF
   module Serializers
     module ObjectSerializer
