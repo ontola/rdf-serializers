@@ -16,6 +16,8 @@ module RDF
       end
 
       def relationship_sequence(record, iris, serialization_params)
+        return [] if iris.blank?
+
         sequence = RDF::Node.new
 
         [
