@@ -30,7 +30,7 @@ module RDF
             options,
             respond_to?(:serializer_params, true) ? serializer_params : {}
           )
-          RDF::Serializers.serializer_for(resource)&.new(resource, serializer_opts)&.dump(symbol, opts)
+          RDF::Serializers.serializer_for(resource)&.new(resource, serializer_opts)&.dump(symbol, **opts)
         end
       end
 

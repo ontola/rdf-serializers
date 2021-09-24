@@ -3,7 +3,7 @@
 module RDF
   module Serializers
     module DataTypeHelper
-      def xsd_to_rdf(xsd, value, opts = {}) # rubocop:disable Metrics/CyclomaticComplexity, Metrics/MethodLength
+      def xsd_to_rdf(xsd, value, **opts) # rubocop:disable Metrics/CyclomaticComplexity, Metrics/MethodLength
         klass =
           case xsd
           when RDF::XSD[:anyURI]
@@ -28,7 +28,7 @@ module RDF
             RDF::Literal
           end
 
-        klass.new(value, opts)
+        klass.new(value, **opts)
       end
     end
   end

@@ -14,15 +14,15 @@ module RDF
         when :hndjson
           render_hndjson
         else
-          render_repository(*args, options)
+          render_repository(*args, **options)
         end
       end
 
       def triples(*args, **options)
         if include_named_graphs?(*args)
-          repository.triples(*args, options)
+          repository.triples(*args, **options)
         else
-          repository.project_graph(nil).triples(*args, options)
+          repository.project_graph(nil).triples(*args, **options)
         end
       end
 
@@ -107,11 +107,11 @@ module RDF
           .join("\n")
       end
 
-      def render_repository(*args, options)
+      def render_repository(*args, **options)
         if include_named_graphs?(*args)
-          repository.dump(*args, options)
+          repository.dump(*args, **options)
         else
-          repository.project_graph(nil).dump(*args, options)
+          repository.project_graph(nil).dump(*args, **options)
         end
       end
 
