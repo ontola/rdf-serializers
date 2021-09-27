@@ -80,47 +80,38 @@ module RDF
 
         def get_included_records_hex(record, includes_list, known_included_objects, fieldsets, params = {})
           return unless includes_list.present?
+          return [] unless relationships_to_serialize
 
-          includes_list.sort.each_with_object([]) do |include_item, included_records|
-            items = parse_include_item(include_item)
-            remaining_items = remaining_items(items)
+          includes_list = parse_includes_list(includes_list)
 
-            items.each do |item|
-              next unless relationships_to_serialize && relationships_to_serialize[item]
+          includes_list.each_with_object([]) do |include_item, included_records|
+            relationship_item = relationships_to_serialize[include_item.first]
 
-              relationship_item = relationships_to_serialize[item]
-              next unless relationship_item.include_relationship?(record, params)
+            next unless relationship_item&.include_relationship?(record, params)
 
-              relationship_type = relationship_item.relationship_type
+            included_objects = Array(relationship_item.fetch_associated_object(record, params))
+            next if included_objects.empty?
 
-              included_objects = relationship_item.fetch_associated_object(record, params)
-              next if included_objects.blank?
+            static_serializer = relationship_item.static_serializer
+            static_record_type = relationship_item.static_record_type
 
-              included_objects = [included_objects] unless relationship_type == :has_many
+            included_objects.each do |inc_obj|
+              serializer = static_serializer || relationship_item.serializer_for(inc_obj, params)
+              record_type = static_record_type || serializer.record_type
 
-              static_serializer = relationship_item.static_serializer
-              static_record_type = relationship_item.static_record_type
-
-              included_objects.each do |inc_obj|
-                serializer = static_serializer || relationship_item.serializer_for(inc_obj, params)
-                record_type = static_record_type || serializer.record_type
-
-                if remaining_items.present?
-                  serializer_records =
-                    serializer
-                    .get_included_records_hex(inc_obj, remaining_items, known_included_objects, fieldsets, params)
-                  included_records.concat(serializer_records) unless serializer_records.empty?
-                end
-
-                code = "#{record_type}_#{serializer.iri_from_record(inc_obj)}"
-                next if known_included_objects.key?(code)
-
-                known_included_objects[code] = inc_obj
-
-                included_records.concat(
-                  serializer.record_hextuples(inc_obj, fieldsets[record_type], includes_list, params)
-                )
+              if include_item.last.any?
+                serializer_records = serializer.get_included_records_hex(inc_obj, include_item.last, known_included_objects, fieldsets, params)
+                included_records.concat(serializer_records) unless serializer_records.empty?
               end
+
+              code = "#{record_type}_#{serializer.iri_from_record(inc_obj)}"
+              next if known_included_objects.include?(code)
+
+              known_included_objects << code
+
+              included_records.concat(
+                serializer.record_hextuples(inc_obj, fieldsets[record_type], includes_list, params)
+              )
             end
           end
         end

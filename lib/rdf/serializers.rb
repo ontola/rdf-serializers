@@ -4,7 +4,6 @@ require 'fast_jsonapi'
 
 require 'rdf/serializers/lookup_chain'
 require 'rdf/serializers/config'
-require 'rdf/serializers/statements'
 require 'rdf/serializers/hextuple_serializer'
 require 'rdf/serializers/data_type_helper'
 require 'rdf/serializers/hdnjson_parser'

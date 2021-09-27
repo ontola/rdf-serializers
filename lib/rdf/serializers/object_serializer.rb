@@ -9,6 +9,11 @@ module RDF
       include FastJsonapi::ObjectSerializer
       include SerializationCore
 
+      included do
+        class_attribute :_statements
+        self._statements ||= []
+      end
+
       def dump(*args, **options)
         case args.first
         when :hndjson
@@ -116,7 +121,7 @@ module RDF
       end
 
       def serializable_hextuples
-        if is_collection?(@resource, @is_collection)
+        if self.class.is_collection?(@resource, @is_collection)
           hextuples_for_collection + meta_hextuples
         elsif !@resource
           []
@@ -153,6 +158,11 @@ module RDF
           serializer_for(association_class_name)
         end
 
+        def inherited(base)
+          super
+          base._statements = _statements.dup
+        end
+
         def serializer_for(name)
           associatopm_serializer = association_serializer_for(name)
           return associatopm_serializer if associatopm_serializer
@@ -163,6 +173,10 @@ module RDF
             raise NameError, "#{self.name} cannot resolve a serializer class for '#{name}'.  " \
                              'Consider specifying the serializer directly through options[:serializer].'
           end
+        end
+
+        def statements(attribute)
+          self._statements << attribute
         end
       end
     end
