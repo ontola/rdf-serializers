@@ -57,9 +57,7 @@ module RDF
         serializers_cache.fetch_or_store(cache_key) do
           # NOTE(beauby): When we drop 1.9.3 support we can lazify the map for perfs.
           lookup_chain = serializer_lookup_chain_for(klass, namespace)
-          serializer_class = lookup_chain.map(&:safe_constantize).find do |x|
-            x&.include?(FastJsonapi::SerializationCore)
-          end
+          serializer_class = serializer_class_from_chain(lookup_chain)
 
           if serializer_class
             serializer_class
@@ -74,6 +72,16 @@ module RDF
       # when looked up by Serializer.get_serializer_for.
       def serializers_cache
         @serializers_cache ||= Concurrent::Map.new
+      end
+
+      def serializer_class_from_chain(lookup_chain)
+        lookup_chain.map do |klass|
+          klass&.safe_constantize
+        rescue LoadError
+          nil
+        end.find do |klass|
+          klass&.include?(FastJsonapi::SerializationCore)
+        end
       end
 
       def serializer_lookup_chain_for(klass, namespace = nil)
