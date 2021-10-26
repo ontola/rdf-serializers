@@ -20,7 +20,7 @@ module RDF
         resource_namespace = namespace_for(resource_class)
         serializer_name = serializer_from(resource_class)
 
-        "#{resource_namespace}::#{serializer_name}"
+        "#{resource_namespace}::#{serializer_name}" if resource_namespace && serializer_name
       end
 
       # Uses the controller namespace of the resource to find the serializer
@@ -28,8 +28,7 @@ module RDF
       # Example:
       #  Api::V3::AuthorsController => Api::V3::AuthorSerializer
       BY_NAMESPACE = lambda do |resource_class, namespace|
-        resource_name = resource_class_name(resource_class)
-        namespace ? "#{namespace}::#{resource_name}Serializer" : nil
+        (namespace && resource_class.name) ? "#{namespace}::#{resource_class_name(resource_class)}Serializer" : nil
       end
 
       DEFAULT = [
@@ -41,11 +40,11 @@ module RDF
       module_function
 
       def namespace_for(klass)
-        klass.name.deconstantize
+        klass.name&.deconstantize
       end
 
       def resource_class_name(klass)
-        klass.name.demodulize
+        klass.name&.demodulize
       end
 
       def serializer_from_resource_name(name)
@@ -54,7 +53,7 @@ module RDF
 
       def serializer_from(klass)
         name = resource_class_name(klass)
-        serializer_from_resource_name(name)
+        serializer_from_resource_name(name) if name
       end
     end
   end
