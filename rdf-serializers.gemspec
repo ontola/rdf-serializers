@@ -21,6 +21,6 @@ Gem::Specification.new do |s|
 
   s.add_runtime_dependency 'jsonapi-serializer', '>= 2.1.0'
   s.add_runtime_dependency 'oj'
-  s.add_runtime_dependency 'railties', '>= 4.2.0', '< 7'
+  s.add_runtime_dependency 'railties', '>= 4.2.0', '< 8'
   s.add_runtime_dependency 'rdf', '~> 3.0'
 end
