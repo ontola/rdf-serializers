@@ -3,6 +3,10 @@
 module RDF
   module Serializers
     module DataTypeHelper
+      def blank_node?(node)
+        node.start_with?('_')
+      end
+
       def xsd_to_rdf(xsd, value, **opts) # rubocop:disable Metrics/CyclomaticComplexity, Metrics/MethodLength
         klass =
           case xsd

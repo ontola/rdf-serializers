@@ -53,7 +53,7 @@ module RDF
       def parse_subject(subject)
         if subject.is_a?(RDF::Resource)
           subject
-        elsif subject.start_with?('_')
+        elsif blank_node?(subject)
           blank_node(subject.sub('_:', ''))
         else
           RDF::URI(subject)
