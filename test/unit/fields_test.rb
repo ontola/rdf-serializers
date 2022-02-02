@@ -32,13 +32,15 @@ class FieldsTest < ActiveSupport::TestCase
   end
 
   def test_fields_included
-    serializer(@post, include: [:comments], fields: { post: [:author], comment: [:body] })
+    serializer(@post, include: [:comments], fields: { post: [:author, :comments], comment: [:body] })
 
     assert_ntriples(
       serializer.dump(:ntriples),
       '<https://comment/7> <http://test.org/text> "cool" .',
       '<https://comment/12> <http://test.org/text> "awesome" .',
-      '<https://post/1337> <http://test.org/author> <https://author/1> .'
+      '<https://post/1337> <http://test.org/author> <https://author/1> .',
+      '<https://post/1337> <http://test.org/comments> <https://comment/7> .',
+      '<https://post/1337> <http://test.org/comments> <https://comment/12> .',
     )
   end
 end

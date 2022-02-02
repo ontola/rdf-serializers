@@ -36,7 +36,7 @@ module RDF
 
       def self.transform_include(include, root = nil)
         return root if include.blank?
-        return [root, include].compact.join('.') if include.is_a?(Symbol) || include.is_a?(String)
+        return [root, [root, include].compact.join('.')] if include.is_a?(Symbol) || include.is_a?(String)
 
         if include.is_a?(Hash)
           include.flat_map do |k, v|
@@ -46,7 +46,7 @@ module RDF
           include.flat_map do |v|
             transform_include(v, root)
           end
-        end.compact
+        end.compact.uniq
       end
 
       def self.transform_opts(options, params)

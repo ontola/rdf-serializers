@@ -7,12 +7,36 @@ module RDF
 
       attr_accessor :predicate, :image, :association, :sequence
 
-      def serialize_hex(record, included, serialization_params)
-        return [] unless include_relationship?(record, serialization_params, included) && predicate.present?
+      def serialize_hex(record, nested_includes, serialization_params, resources_to_include)
+        included = !nested_includes.nil?
+        return [] unless include_relationship?(record, serialization_params, included) && (predicate.present? || included)
 
-        iris = iris_from_record_and_relationship(record, serialization_params)
+        objects = objects_for_relationship(record, serialization_params)
+        objects_to_include(objects, record, included).each do |object|
+          add_to_include_list(resources_to_include, object, nested_includes, @serializer)
+        end
+
+        return [] if predicate.blank?
+
+        iris = objects.map(&method(:iri_from_record))
 
         sequence ? relationship_sequence(record, iris, serialization_params) : relationship_statements(record, iris, serialization_params)
+      end
+
+      private
+
+      def add_to_include_list(resources_to_include, object, nested_includes, serializer_class)
+        key = iri_from_record(object).to_s
+        resources_to_include[key] ||= {
+          includes: {},
+          resource: object,
+          serializer_class: serializer_class
+        }
+        resources_to_include[key][:includes].merge!(nested_includes) if nested_includes
+      end
+
+      def objects_to_include(objects, record, included)
+        included ? objects : objects.select { |object| part_of_document(record, object) }
       end
 
       def relationship_sequence(record, iris, serialization_params)
@@ -21,7 +45,7 @@ module RDF
         sequence = RDF::Node.new
 
         [
-          value_to_hex(iri_from_record(record).to_s, predicate, sequence, nil, serialization_params),
+          value_to_hex(iri_from_record(record).to_s, resolve_predicate(0), sequence, nil, serialization_params),
           value_to_hex(sequence, RDF.type, RDF.Seq, nil, serialization_params)
         ] + iris.map.with_index do |iri, index|
           value_to_hex(sequence, RDF["_#{index}"], iri, nil, serialization_params)
@@ -29,15 +53,21 @@ module RDF
       end
 
       def relationship_statements(record, iris, serialization_params)
-        iris.map do |related_iri|
+        iris.map.with_index do |related_iri, index|
           value_to_hex(
             iri_from_record(record).to_s,
-            predicate,
+            resolve_predicate(index),
             related_iri,
             nil,
             serialization_params
           )
         end
+      end
+
+      def resolve_predicate(index)
+        return predicate unless predicate.respond_to?(:call)
+
+        predicate.call(self, index)
       end
 
       def include_relationship?(record, serialization_params, included = false)
@@ -46,19 +76,21 @@ module RDF
         super(record, serialization_params)
       end
 
-      def iris_from_record_and_relationship(record, params = {})
+      def objects_for_relationship(record, params = {})
         initialize_static_serializer unless @initialized_static_serializer
 
         associated_object = fetch_associated_object(record, params)
         return [] unless associated_object
 
-        if associated_object.respond_to? :map
-          return associated_object.compact.map do |object|
-            iri_from_record(object)
-          end
-        end
+        associated_object.respond_to?(:map) ? associated_object.compact : [associated_object]
+      end
 
-        [iri_from_record(associated_object)]
+      def part_of_document(record, object)
+        return false if object.try(:uri?)
+        object_iri = iri_from_record(object)
+
+        object.iri.node? ||
+          iri_from_record(record).to_s.split('#').first == object_iri.to_s.split('#').first
       end
     end
   end

@@ -34,62 +34,44 @@ module RDF
 
       private
 
-      def blank_node(id)
-        @blank_nodes ||= {}
-        @blank_nodes[id] ||= RDF::Node(id)
-      end
+      def hextuples_for_resources
+        @resources_to_include = initial_resource_hash
+        @included_resources = Set[]
+        statements = []
+        while  (current_resource = @resources_to_include.keys.first) do
+          opts = @resources_to_include.delete(current_resource)
 
-      def hextuples_for_collection
-        data = []
-        fieldset = @fieldsets[self.class.record_type.to_sym]
-        @resource.each do |record|
-          data.concat self.class.record_hextuples(record, fieldset, @includes, @params)
-          next unless @includes.present?
+          next if @included_resources.include?(current_resource)
 
-          data.concat(
-            self.class.get_included_records_hex(record, @includes, @known_included_objects, @fieldsets, @params)
-          )
+          @included_resources << current_resource
+
+          statements += statements_for_resource(opts[:resource], opts)
         end
-
-        data
-      end
-
-      def hextuples_for_one_record
-        serializable_hextuples = []
-
-        serializable_hextuples.concat self.class.record_hextuples(
-          @resource,
-          @fieldsets[self.class.record_type.to_sym],
-          @includes,
-          @params
-        )
-
-        if @includes.present?
-          serializable_hextuples.concat self.class.get_included_records_hex(
-            @resource,
-            @includes,
-            @known_included_objects,
-            @fieldsets,
-            @params
-          )
-        end
-
-        serializable_hextuples
-      end
-
-      def hextuples_for_resource
-        if self.class.is_collection?(@resource, @is_collection)
-          hextuples_for_collection + meta_hextuples
-        elsif !@resource
-          []
-        else
-          hextuples_for_one_record + meta_hextuples
-        end
+        statements
       end
 
       def include_named_graphs?(*args)
         ::RDF::Serializers.config.always_include_named_graphs ||
           ::RDF::Writer.for(*args.presence || :nquads).instance_methods.include?(:write_quad)
+      end
+
+      def initial_resource_hash
+        hash = {}
+        if self.class.is_collection?(@resource, @is_collection)
+          @resource.each do |resource|
+            hash[iri_from_record(resource).to_s] = {
+              includes: @includes,
+              resource: resource
+            }
+          end
+        elsif @resource
+          hash[iri_from_record(@resource).to_s] = {
+            includes: @includes,
+            resource: @resource,
+            serializer_class: self.class
+          }
+        end
+        hash
       end
 
       def meta_hextuples
@@ -114,6 +96,22 @@ module RDF
 
           statement[RDF::Serializers::HndJSONParser::HEX_PREDICATE]
         end
+      end
+
+      def process_includes_option(includes)
+        includes&.each_with_object({}) do |include_item, result|
+          include_items = include_item.to_s.split('.')
+          parent = result
+          include_items.each do |include_item|
+            parent[include_item.to_sym] ||= {}
+            parent = parent[include_item.to_sym]
+          end
+        end
+      end
+
+      def process_options(options)
+        super
+        @includes = process_includes_option(@includes)
       end
 
       def raise_on_missing_nodes?
@@ -156,9 +154,21 @@ module RDF
       end
 
       def serializable_hextuples
-        tuples = hextuples_for_resource
+        tuples = hextuples_for_resources + meta_hextuples
         raise_missing_nodes(tuples) if raise_on_missing_nodes?
         tuples
+      end
+
+      def statements_for_resource(resource, opts)
+        include_set = opts[:includes]
+        serializer = opts[:serializer_class] || RDF::Serializers.serializer_for(resource)
+        serializer.record_hextuples(
+          resource,
+          @fieldsets[serializer.record_type.to_sym],
+          include_set,
+          @params,
+          @resources_to_include
+        )
       end
 
       class_methods do

@@ -84,10 +84,9 @@ class HasManyTest < ActiveSupport::TestCase
   end
 
   def test_has_many_with_no_serializer
-    @serializer = PostWithTagsSerializer.new(@post)
 
     assert_raise(NameError) do
-      assert @serializer.dump(:ntriples).include?('<https://post/1> <http://test.org/name> "New Post" .')
+      @serializer = PostWithTagsSerializer.new(@post, include: [:tags])
     end
   end
 end
