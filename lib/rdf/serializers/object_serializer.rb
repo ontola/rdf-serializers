@@ -60,13 +60,13 @@ module RDF
         if self.class.is_collection?(@resource, @is_collection)
           @resource.each do |resource|
             hash[iri_from_record(resource).to_s] = {
-              includes: @includes,
+              includes: @rdf_includes,
               resource: resource
             }
           end
         elsif @resource
           hash[iri_from_record(@resource).to_s] = {
-            includes: @includes,
+            includes: @rdf_includes,
             resource: @resource,
             serializer_class: self.class
           }
@@ -111,7 +111,7 @@ module RDF
 
       def process_options(options)
         super
-        @includes = process_includes_option(@includes)
+        @rdf_includes = process_includes_option(@includes)
       end
 
       def raise_on_missing_nodes?

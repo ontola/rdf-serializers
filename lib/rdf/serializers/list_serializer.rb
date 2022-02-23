@@ -7,7 +7,7 @@ module RDF
 
       def hextuples_for_collection
         @resource.map do |resource|
-          RDF::Serializers.serializer_for(resource).record_hextuples(resource, nil, @includes, @params)
+          RDF::Serializers.serializer_for(resource).record_hextuples(resource, nil, @rdf_includes, @params)
         end.flatten(1)
       end
 

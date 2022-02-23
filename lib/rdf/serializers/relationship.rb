@@ -7,6 +7,12 @@ module RDF
 
       attr_accessor :predicate, :image, :association, :sequence
 
+      def include_relationship?(record, serialization_params, included = false)
+        return false if lazy_load_data && !included
+
+        super(record, serialization_params)
+      end
+
       def serialize_hex(record, nested_includes, serialization_params, resources_to_include)
         included = !nested_includes.nil?
         return [] unless include_relationship?(record, serialization_params, included) && (predicate.present? || included)
@@ -68,12 +74,6 @@ module RDF
         return predicate unless predicate.respond_to?(:call)
 
         predicate.call(self, index)
-      end
-
-      def include_relationship?(record, serialization_params, included = false)
-        return false if lazy_load_data && !included
-
-        super(record, serialization_params)
       end
 
       def objects_for_relationship(record, params = {})
