@@ -52,7 +52,7 @@ module RDF
 
       def include_named_graphs?(*args)
         ::RDF::Serializers.config.always_include_named_graphs ||
-          ::RDF::Writer.for(*args.presence || :nquads).instance_methods.include?(:write_quad)
+          ::RDF::Writer.for(*args.presence || :nquads)&.instance_methods&.include?(:write_quad)
       end
 
       def initial_resource_hash
